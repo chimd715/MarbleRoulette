@@ -475,7 +475,7 @@ export const stages: StageDef[] = [
         props: { density: 1, angularVelocity: 0, restitution: 2 },
       },
       {
-        position: { x: 20.3, y: 102.4 },
+        position: { x: 21.1, y: 102.4 },
         type: 'static',
         shape: { type: 'box', width: 0.2, height: 0.2, rotation: 0.7853981633974483 },
         props: { density: 1, angularVelocity: 0, restitution: 1.5 },
