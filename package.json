@@ -1,5 +1,5 @@
 {
-  "name": "roulette",
+  "name": "marble-roulette",
   "version": "1.0.0",
   "license": "MIT",
   "devDependencies": {
@@ -21,7 +21,7 @@
   "scripts": {
     "lint": "eslint --fix src/**/*.ts",
     "dev": "parcel index.html --port 1235",
-    "build": "parcel build index.html --public-url /roulette/",
+    "build": "parcel build index.html --public-url /MarbleRoulette/",
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
