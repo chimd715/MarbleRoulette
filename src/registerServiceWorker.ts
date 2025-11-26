@@ -1,7 +1,6 @@
 export function registerServiceWorker() {
   // Only register service worker in production (GitHub Pages)
-  const isProduction = window.location.hostname === 'lazygyu.github.io' ||
-                       window.location.hostname.endsWith('.github.io');
+  const isProduction = window.location.hostname.endsWith('.github.io');
 
   if (!isProduction) {
     return;
@@ -9,7 +8,7 @@ export function registerServiceWorker() {
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      const swUrl = `${window.location.origin}/roulette/service-worker.js`;
+      const swUrl = `${window.location.origin}/MarbleRoulette/service-worker.js`;
       navigator.serviceWorker
         .register(swUrl)
         .catch(() => {
