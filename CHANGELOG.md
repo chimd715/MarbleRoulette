@@ -1,5 +1,11 @@
 # Changelog
 
+- 2025-11-13:
+    - Optimized the rendering process.
+- 2025-11-10:
+    - Now it can be fast forwarded by mouse down or touch down the centural area of the canvas.
+- 2025-11-01:
+    - Support PWA
 - 2024-05-22:
     - Replace the physics engine to [box2d-wasm](https://github.com/Birch-san/box2d-wasm) for improving the performance.
 - 2024-02-19:

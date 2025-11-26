@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-5899C1DJM0"></script>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-5899C1DJM0"></script>
+
+  <title>Marble Roulette</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="apple-touch-icon" sizes="57x57" href="assets/apple-icon-57x57.png">
   <link rel="apple-touch-icon" sizes="60x60" href="assets/apple-icon-60x60.png">
   <link rel="apple-touch-icon" sizes="72x72" href="assets/apple-icon-72x72.png">
@@ -19,352 +21,19 @@
   <link rel="icon" type="image/png" sizes="96x96" href="assets/favicon-96x96.png">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
   <link rel="manifest" href="assets/manifest.json">
+
   <meta name="msapplication-TileColor" content="#ffffff">
   <meta name="msapplication-TileImage" content="assets/ms-icon-144x144.png">
   <meta name="theme-color" content="#ffffff">
-  <title>Marble Roulette</title>
-  <style lang="scss">
-    * {
-      box-sizing: border-box;
-    }
 
-    canvas {
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-    }
+  <meta name="description" content="A lucky draw by dropping marbles, made by lazygyu">
+  <meta property="og:url" content="https://lazygyu.github.io/roulette/">
+  <meta property="og:title" content="Marble Roulette">
+  <meta property="og:description" content="A lucky draw by dropping marbles, made by lazygyu">
+  <meta property="og:site_name" content="lazygyu.github.io">
+  <meta property="og:type" content="website">
 
-    div.copyright {
-      position: fixed;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      color: white;
-      font-size: 12px;
-      z-index: 999;
-      width: 90%;
-      text-align: center;
-    }
-
-    div.copyright a {
-      color: white;
-    }
-
-    #settings {
-      position: fixed;
-      bottom: 1rem;
-      left: 1rem;
-      background: #666;
-      border-radius: 10px;
-      padding: 10px;
-      z-index: 999;
-      min-width: 50%;
-
-      display: flex;
-      visibility: visible;
-      opacity: 1;
-      transition: visibility 0s, opacity 1s linear;
-
-      &.hide {
-        opacity: 0;
-        visibility: hidden;
-      }
-
-      h3 {
-        padding: 0;
-        margin: 0;
-        font-size: 12pt;
-        color: #fefefe;
-      }
-
-      textarea {
-        width: 100%;
-        min-height: 5rem;
-        border: none;
-        background: #999;
-        font-size: 14pt;
-      }
-
-      button {
-        color: #fefefe;
-        background: #222;
-        border: none;
-        border-radius: 5px;
-        padding: 5px 10px;
-        position: relative;
-        overflow: hidden;
-
-        &:active:after {
-          content: '';
-          position: absolute;
-          left: 0;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.5);
-        }
-      }
-
-      .icon {
-        background: currentColor;
-        mask-repeat: no-repeat;
-        mask-position: center center;
-        mask-size: contain;
-        display: inline-block;
-        width: 25px;
-        height: 25px;
-        vertical-align: middle;
-
-        &.play {
-          mask-image: url('assets/images/play.svg');
-        }
-
-        &.shuffle {
-          mask-image: url('assets/images/shuffle.svg');
-        }
-        &.megaphone {
-          mask-image: url('assets/images/megaphone.svg');
-        }
-
-        &.record {
-          mask-image: url('assets/images/record.svg');
-        }
-
-        &.map {
-          mask-image: url('assets/images/map.svg');
-        }
-
-        &.trophy {
-          mask-image: url('assets/images/trophy.svg');
-        }
-
-        &.bomb {
-          mask-image: url('assets/images/bomb.svg');
-        }
-
-        &.download {
-          mask-image: url('assets/images/download.svg');
-        }
-      }
-
-      .download-dropdown {
-        position: relative;
-        display: inline-block;
-
-        .dropdown-content {
-          display: none;
-          position: absolute;
-          bottom: calc(100% - 5px);
-          left: 0;
-          background: #333;
-          border-radius: 5px;
-          min-width: 80px;
-          box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
-          z-index: 1000;
-          padding-bottom: 5px;
-
-          button {
-            width: 100%;
-            text-align: left;
-            padding: 8px 12px;
-            border-radius: 0;
-            background: transparent;
-
-            &:hover {
-              background: #444;
-            }
-
-            &:first-child {
-              border-radius: 5px 5px 0 0;
-            }
-
-            &:last-child {
-              border-radius: 0;
-            }
-          }
-        }
-
-        &:hover .dropdown-content,
-        &.open .dropdown-content {
-          display: block;
-        }
-      }
-
-      div.left {
-        flex-grow: 1;
-        flex-shrink: 1;
-        order: 1;
-
-        .actions {
-          display: flex;
-          align-items: center;
-          justify-content: stretch;
-          gap: 2px;
-          div.sep {
-            flex-grow: 1;
-          }
-        }
-      }
-
-      div.right {
-        order: 2;
-        flex-grow: 0;
-        flex-shrink: 0;
-
-        div.row {
-          display: flex;
-          align-items: center;
-          height: 35px;
-
-          label {
-            width: 150px;
-            flex-grow: 0;
-            flex-shrink: 0;
-            padding-left: 1rem;
-            color: white;
-          }
-        }
-      }
-
-      select {
-        height: 25px;
-        width: 100%;
-        border-radius: 5px;
-        background: #999;
-      }
-
-      input[type=checkbox] {
-        width: 0;
-        height: 25px;
-        position: relative;
-        vertical-align: middle;
-
-        &:before {
-          position: absolute;
-          content: '';
-          display: inline-block;
-          width: 50px;
-          height: 25px;
-          border-radius: 25px;
-          background: #999;
-          top: 0;
-          left: 0;
-        }
-
-        &:after {
-          position: absolute;
-          top: 0;
-          left: 0;
-          content: '';
-          border-radius: 25px;
-          width: 25px;
-          height: 25px;
-          background: #ccc;
-          transition: transform .2s;
-        }
-
-        &:checked:after {
-          transform: translateX(100%);
-          background: white;
-        }
-
-        &:checked:before {
-          content: '';
-          background: #00baff;
-        }
-      }
-
-      .btn-group {
-        display: flex;
-        justify-content: stretch;
-
-        & > * {
-          box-sizing: border-box;
-          flex-grow: 0;
-          flex-shrink: 0;
-          overflow: hidden;
-          height: 25px;
-          width: 33%;
-          border-radius: 0;
-          background: #999;
-          border: none;
-          padding: 0;
-          color: #fefefe;
-
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          &:first-child {
-            border-radius: 10px 0 0 10px;
-          }
-
-          &:last-child {
-            border-radius: 0 10px 10px 0;
-          }
-
-          &.active:before {
-            content: '';
-            width: 15px;
-            height: 15px;
-            display: inline-block;
-            vertical-align: middle;
-            mask-image: url('assets/images/check.svg');
-            mask-repeat: no-repeat;
-            background: white;
-          }
-
-          &.active {
-            background: #333;
-          }
-        }
-
-        input[type=number] {
-          box-sizing: border-box;
-          text-align: center;
-        }
-      }
-    }
-
-    @media screen and (max-width: 750px) {
-      #settings {
-        bottom: calc(2.5rem + 60px);
-        display: block;
-        min-width: 0;
-        max-width: 100%;
-        width: calc(100% - 2rem);
-        overflow: hidden;
-        opacity: 1;
-        visibility: visible;
-        transition: visibility 0s, opacity 1s linear;
-
-        &.hide {
-          opacity: 0;
-          visibility: hidden;
-        }
-
-        div.right div.row {
-          height: auto;
-          display: block;
-          border-bottom: 1px solid #555;
-          padding: .5rem 0;
-
-          label {
-            width: 100%;
-            margin-bottom: .5rem;
-            padding-left: 0;
-            display: block;
-          }
-
-          .icon {
-            width: 15px;
-            height: 15px;
-          }
-        }
-      }
-    }
-  </style>
+  <link rel='stylesheet' href='assets/style.scss' />
 </head>
 <body>
 <script type="module" src="./src/index.ts"></script>
@@ -377,114 +46,6 @@
 
   gtag('js', new Date());
   gtag('config', 'G-5899C1DJM0');
-
-  // 결과 다운로드 기능
-  function getResultsData() {
-    const winners = window.roullete._winners || [];
-    const remaining = window.roullete._marbles || [];
-    const allResults = [];
-
-    // 완주자 추가
-    winners.forEach((m, i) => {
-      allResults.push({ rank: i + 1, name: m.name, status: 'Finished' });
-    });
-
-    // 남은 마블 추가 (현재 순위순)
-    remaining.forEach((m, i) => {
-      allResults.push({ rank: winners.length + i + 1, name: m.name, status: 'Racing' });
-    });
-
-    return allResults;
-  }
-
-  function downloadAsTxt() {
-    const results = getResultsData();
-    if (results.length === 0) {
-      alert('No results to download');
-      return;
-    }
-
-    const lines = results.map(r => `${r.rank}. ${r.name}`);
-    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
-    downloadBlob(blob, 'marble_results.txt');
-  }
-
-  function downloadAsCsv() {
-    const results = getResultsData();
-    if (results.length === 0) {
-      alert('No results to download');
-      return;
-    }
-
-    const lines = ['Rank,Name'];
-    results.forEach(r => {
-      // CSV 이스케이프: 쉼표나 따옴표가 있으면 따옴표로 감싸기
-      const name = r.name.includes(',') || r.name.includes('"')
-        ? `"${r.name.replace(/"/g, '""')}"`
-        : r.name;
-      lines.push(`${r.rank},${name}`);
-    });
-
-    // BOM 추가 (Excel에서 한글 인식용)
-    const bom = '\uFEFF';
-    const blob = new Blob([bom + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
-    downloadBlob(blob, 'marble_results.csv');
-  }
-
-  function downloadAsXlsx() {
-    const results = getResultsData();
-    if (results.length === 0) {
-      alert('No results to download');
-      return;
-    }
-
-    // 간단한 XML 기반 Excel 파일 생성 (SpreadsheetML)
-    const xmlHeader = '<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?>';
-    const workbookStart = '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">';
-    const workbookEnd = '</Workbook>';
-    const worksheetStart = '<Worksheet ss:Name="Results"><Table>';
-    const worksheetEnd = '</Table></Worksheet>';
-
-    let rows = '';
-
-    // 헤더 행
-    rows += '<Row>';
-    rows += '<Cell><Data ss:Type="String">Rank</Data></Cell>';
-    rows += '<Cell><Data ss:Type="String">Name</Data></Cell>';
-    rows += '</Row>';
-
-    // 데이터 행
-    results.forEach(r => {
-      rows += '<Row>';
-      rows += `<Cell><Data ss:Type="Number">${r.rank}</Data></Cell>`;
-      rows += `<Cell><Data ss:Type="String">${escapeXml(r.name)}</Data></Cell>`;
-      rows += '</Row>';
-    });
-
-    const xml = xmlHeader + workbookStart + worksheetStart + rows + worksheetEnd + workbookEnd;
-    const blob = new Blob([xml], { type: 'application/vnd.ms-excel' });
-    downloadBlob(blob, 'marble_results.xls');
-  }
-
-  function escapeXml(str) {
-    return str
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&apos;');
-  }
-
-  function downloadBlob(blob, filename) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
 
   function getNames() {
     const value = document.querySelector('#in_names').value.trim();
@@ -508,7 +69,7 @@
 
   function getReady() {
     const names = getNames();
-    window.roullete.setMarbles(names);
+    window.roulette.setMarbles(names);
     ready = names.length > 0;
     localStorage.setItem('mbr_names', names.join(','));
     switch (winnerType) {
@@ -516,7 +77,7 @@
         setWinnerRank(1);
         break;
       case 'last':
-        const total = window.roullete.getCount();
+        const total = window.roulette.getCount();
         setWinnerRank(total);
         break;
     }
@@ -525,7 +86,7 @@
   function setWinnerRank(rank) {
     document.querySelector('#in_winningRank').value = rank;
     window.options.winningRank = rank - 1;
-    window.roullete.setWinningRank(window.options.winningRank);
+    window.roulette.setWinningRank(window.options.winningRank);
 
     if (winnerType === 'first') {
       document.querySelector('.btn-first-winner').classList.toggle('active', true);
@@ -544,23 +105,30 @@
 
 
   let ready = false;
-  let winnerType = 'last';
+  let winnerType = 'first';
 
   document.addEventListener('DOMContentLoaded', () => {
     initialize();
   });
 
   function initialize() {
-    if (!window.roullete || !window.roullete.isReady) {
+    if (!window.roulette || !window.roulette.isReady) {
       console.log('does not loaded yet');
       setTimeout(initialize, 100);
       return;
     }
     console.log('initializing start');
 
-    const savedNames = localStorage.getItem('mbr_names');
-    if (savedNames) {
-      document.querySelector('#in_names').value = savedNames;
+    const urlParams = new URLSearchParams(window.location.search);
+    const namesFromUrl = urlParams.get('names');
+
+    if (namesFromUrl) {
+      document.querySelector('#in_names').value = namesFromUrl.replace(/,/g, '\n');
+    } else {
+      const savedNames = localStorage.getItem('mbr_names');
+      if (savedNames) {
+        document.querySelector('#in_names').value = savedNames;
+      }
     }
     document.querySelector('#in_names').addEventListener('input', () => {
       getReady();
@@ -601,39 +169,32 @@
       getReady();
     });
 
-    // 다운로드 버튼 이벤트
-    document.querySelector('#btnDownloadTxt').addEventListener('click', (e) => {
-      e.stopPropagation();
-      downloadAsTxt();
-    });
-    document.querySelector('#btnDownloadCsv').addEventListener('click', (e) => {
-      e.stopPropagation();
-      downloadAsCsv();
-    });
-    document.querySelector('#btnDownloadXls').addEventListener('click', (e) => {
-      e.stopPropagation();
-      downloadAsXlsx();
-    });
-
     document.querySelector('#btnStart').addEventListener('click', () => {
       if (!ready) return;
       gtag && gtag('event', 'start', {
         'event_category': 'roulette',
         'event_label': 'start',
-        'value': window.roullete.getCount(),
+        'value': window.roulette.getCount(),
       });
-      window.roullete.start();
+      window.roulette.start();
       document.querySelector('#settings').classList.add('hide');
+      document.querySelector('#donate').classList.add('hide');
     });
 
     document.querySelector('#chkAutoRecording').addEventListener('change', (e) => {
       window.options.autoRecording = e.target.matches(':checked');
-      window.roullete.setAutoRecording(window.options.autoRecording);
+      window.roulette.setAutoRecording(window.options.autoRecording);
     });
 
     document.querySelector('#chkSkill').addEventListener('change', (e) => {
       window.options.useSkills = e.target.matches(':checked');
-      window.roullete.setWinningRank(window.options.winningRank);
+      window.roulette.setWinningRank(window.options.winningRank);
+    });
+
+    document.querySelector('#chkDarkMode').addEventListener('change', (e) => {
+      window.options.darkMode = e.target.matches(':checked');
+      window.roulette.setTheme(window.options.darkMode ? 'dark' : 'light');
+      document.documentElement.classList.toggle('light', !window.options.darkMode);
     });
 
     document.querySelector('#in_winningRank').addEventListener('change', (e) => {
@@ -643,7 +204,7 @@
     });
 
     document.querySelector('.btn-last-winner').addEventListener('click', () => {
-      const total = window.roullete.getCount();
+      const total = window.roulette.getCount();
       winnerType = 'last';
       setWinnerRank(total);
     });
@@ -652,28 +213,21 @@
       setWinnerRank(1);
     });
 
-    document.querySelector('#btnShake').addEventListener('click', () => {
-      window.roullete.shake();
-      gtag('event', 'shake', {
-        'event_category': 'roulette',
-        'event_label': 'shake',
-        'value': 1,
-      });
-    });
-
-    window.roullete.addEventListener('goal', () => {
+    window.roulette.addEventListener('goal', () => {
       ready = false;
       setTimeout(() => {
         document.querySelector('#settings').classList.remove('hide');
+        document.querySelector('#donate').classList.remove('hide');
       }, 3000);
     });
-    window.roullete.addEventListener('shakeAvailableChanged', (e) => {
-      document.querySelector('#inGame').classList.toggle('hide', !e.detail);
+
+    window.roulette.addEventListener('message', (e) => {
+      simpleToast(e.detail);
     });
 
     document.querySelector('#btnShuffle').click();
 
-    const maps = window.roullete.getMaps();
+    const maps = window.roulette.getMaps();
     const mapSelector = document.querySelector('#sltMap');
     maps.forEach((map) => {
       const option = document.createElement('option');
@@ -685,21 +239,80 @@
     });
     mapSelector.addEventListener('change', (e) => {
       const index = e.target.value;
-      window.roullete.setMap(index);
+      window.roulette.setMap(index);
     });
+
+    const checkDonateButtonLoaded = () => {
+      const btn = document.querySelector('span.bmc-btn-text');
+      if (!btn) {
+        setTimeout(checkDonateButtonLoaded, 100);
+      } else {
+        console.log('donation button has been loaded');
+        btn.setAttribute('data-trans', '');
+        window.translateElement(btn);
+      }
+    };
+    setTimeout(checkDonateButtonLoaded, 100);
+
+    const currentNotice = 2;
+    const noticeKey = 'lastViewedNotification';
+
+    const closeNotice = () => {
+      document.querySelector('#notice').style.display = 'none';
+      localStorage.setItem(noticeKey, currentNotice.toString());
+    };
+
+    const openNotice = () => {
+      console.log('openNotice');
+      document.querySelector('#notice').style.display = 'flex';
+    };
+
+    document.querySelector('#closeNotice').addEventListener('click', () => {
+      closeNotice();
+    });
+
+    document.querySelector('#btnNotice').addEventListener('click', () => {
+      openNotice();
+    });
+
+    function simpleToast(msg) {
+      const toast = document.createElement('div');
+      toast.classList.add('toast');
+      toast.innerHTML = msg;
+
+      if (window.translateElement) {
+        console.log('try to translate');
+        window.translateElement(toast);
+      }
+
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        document.body.removeChild(toast);
+      }, 1200);
+    }
+
+    const checkNotice = () => {
+      const lastViewed = localStorage.getItem(noticeKey);
+      console.log('lastViewed', lastViewed);
+      if (lastViewed === null || Number(lastViewed) < currentNotice) {
+        openNotice();
+      }
+    };
+
+    checkNotice();
   }
 </script>
 <div id="settings" class="settings">
   <div class="right">
     <div class="row">
-      <label>
+      <label for='sltMap'>
         <i class="icon map"></i>
         <span data-trans>Map</span>
       </label>
       <select id="sltMap"></select>
     </div>
     <div class="row">
-      <label>
+      <label for='chkAutoRecording'>
         <i class="icon record"></i>
         <span data-trans>Recording</span>
       </label>
@@ -711,34 +324,31 @@
         <span data-trans>The winner is</span>
       </label>
       <div class="btn-group">
-        <button class="btn-winner btn-first-winner" data-trans>First</button>
-        <button class="btn-winner btn-last-winner active" data-trans>Last</button>
+        <button class="btn-winner btn-first-winner active" data-trans>First</button>
+        <button class="btn-winner btn-last-winner" data-trans>Last</button>
         <input type="number" id="in_winningRank" value="1" min="1" />
       </div>
     </div>
     <div class="row">
-      <label>
+      <label for='chkSkill'>
         <i class="icon bomb"></i>
         <span data-trans>Using skills</span>
       </label>
       <input type="checkbox" id="chkSkill" checked />
+      <div class='theme'>
+        <i class='icon sun'></i>
+        <input type='checkbox' id='chkDarkMode' checked />
+        <i class='icon moon'></i>
+      </div>
     </div>
   </div>
   <div class="left">
     <h3 data-trans>Enter names below</h3>
     <textarea id="in_names" placeholder="Input names separated by commas or line feed here" data-trans="placeholder">짱구*5, 짱아*10, 봉미선*3</textarea>
     <div class="actions">
-      <div class="download-dropdown" id="downloadDropdown">
-        <button id="btnDownload">
-          <i class="icon download"></i>
-          <span data-trans>Download</span>
-        </button>
-        <div class="dropdown-content">
-          <button id="btnDownloadTxt">.txt</button>
-          <button id="btnDownloadCsv">.csv</button>
-          <button id="btnDownloadXls">.xlsx</button>
-        </div>
-      </div>
+      <button id="btnNotice">
+        <i class="icon megaphone"></i>
+      </button>
       <div class="sep"></div>
       <button id="btnShuffle">
         <i class="icon shuffle"></i>
@@ -751,9 +361,34 @@
     </div>
   </div>
 </div>
-<div id="inGame" class="settings hide">
-  <button id="btnShake" data-trans>Shake!</button>
+<div id="donate">
+  <script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js"
+          data-name="bmc-button" data-slug="lazygyu" data-color="#FFDD00" data-emoji=""
+          data-font="Comic" data-text="Buy me a coffee" data-outline-color="#000000" data-font-color="#000000"
+          data-coffee-color="#ffffff"></script>
 </div>
-<div class="copyright">&copy; 2025.<a href="https://lazygyu.net" target="_blank">lazygyu</a> <span data-trans>This program is freeware and may be used freely anywhere, including in broadcasts and videos.</span></div>
+<div id="notice">
+  <h1>Notice</h1>
+  <div class="notice-body">
+    <p>마블 룰렛 사용자 여러분 안녕하세요. 개발자 lazygyu 입니다.</p>
+    <p>최근 마블 룰렛에 <a href='https://lazygyu.net/blog/stolen-copyright' target='_blank'>저작권 관련한 사건</a>이 발생하여 많은 분들께 우려를
+      끼쳐드렸습니다.</p>
+    <p>이런 사정을 알고 <a href='https://www.youtube.com/@%EA%BD%89%EB%B3%80%ED%98%B8%EC%82%AC' target='_blank'>꽉변호사</a>님께서 법적
+      조치에 도움을 주겠다고 연락을 주셨습니다.</p>
+    <p>법적 절차에 필요한 비용을 모금을 통해 충당할 예정이고, 혹시 사용 후 남은 금액이 있다면 전액 사회적 약자를 위한 공익 소송을 담당하고 있는 <a
+      href='https://www.legalaid.or.kr/' target='_blank'>대한변협법률구조재단</a>에
+      기부됩니다.</p>
+    <p>이 프로그램 뿐 아니라 이러한 저작권 문제로 고통받는 다른 분들께도 좋은 선례가 될 수 있도록 도와주세요!<br />
+    </p>
+    <p>
+      <bold>모금 마감되었습니다. 여러분의 성원에 진심으로 감사드립니다.</bold>
+    </p>
+  </div>
+  <div class="notice-action">
+    <button id="closeNotice" data-trans>Close</button>
+  </div>
+</div>
+<div class="copyright">&copy; 2022-2025.<a href="https://lazygyu.net" target="_blank">lazygyu</a> <span data-trans>This program is freeware and may be used freely anywhere, including in broadcasts and videos.</span>
+</div>
 </body>
 </html>

@@ -1,7 +1,8 @@
 import { RenderParameters } from './rouletteRenderer';
-import { UIObject } from './UIObject';
+import { MouseEventArgs, UIObject } from './UIObject';
 import { bound } from './utils/bound.decorator';
 import { Rect } from './types/rect.type';
+import { Marble } from './marble';
 
 export class RankRenderer implements UIObject {
   private _currentY = 0;
@@ -10,6 +11,10 @@ export class RankRenderer implements UIObject {
   private _userMoved = 0;
   private _currentWinner = -1;
   private maxY = 0;
+  private winners: Marble[] = [];
+  private marbles: Marble[] = [];
+  private winnerRank: number = -1;
+  private messageHandler?: (msg: string) => void;
 
   constructor() {
   }
@@ -23,9 +28,35 @@ export class RankRenderer implements UIObject {
     this._userMoved = 2000;
   }
 
+  @bound
+  onDblClick(e?: MouseEventArgs) {
+    if (e) {
+      if (navigator.clipboard) {
+        const tsv: string[] = [];
+        let rank = 0;
+        tsv.push(...[...this.winners, ...this.marbles].map((m) => {
+          rank++;
+          return [rank.toString(), m.name, rank - 1 === this.winnerRank ? '☆' : ''].join('\t');
+        }));
+
+        tsv.unshift(['Rank', 'Name', 'Winner'].join('\t'));
+
+        navigator.clipboard.writeText(tsv.join('\n')).then(() => {
+          if (this.messageHandler) {
+            this.messageHandler('The result has been copied');
+          }
+        });
+      }
+    }
+  }
+
+  onMessage(func: (msg: string) => void) {
+    this.messageHandler = func;
+  }
+
   render(
     ctx: CanvasRenderingContext2D,
-    { winners, marbles, winnerRank }: RenderParameters,
+    { winners, marbles, winnerRank, theme }: RenderParameters,
     width: number,
     height: number,
   ) {
@@ -37,6 +68,10 @@ export class RankRenderer implements UIObject {
     );
     this._currentWinner = winners.length;
 
+    this.winners = winners;
+    this.marbles = marbles;
+    this.winnerRank = winnerRank;
+
     ctx.save();
     ctx.textAlign = 'right';
     ctx.font = '10pt sans-serif';
@@ -44,15 +79,24 @@ export class RankRenderer implements UIObject {
     ctx.fillText(`${winners.length} / ${winners.length + marbles.length}`, width - 5, this.fontHeight);
 
     ctx.beginPath();
-    ctx.rect(0, this.fontHeight + 2, width, this.maxY);
+    ctx.rect(width - 150, this.fontHeight + 2, width, this.maxY);
     ctx.clip();
 
     ctx.translate(0, -startY);
     ctx.font = 'bold 11pt sans-serif';
-    winners.forEach((marble: { color: string; name: string }, rank: number) => {
+    if (theme.rankStroke) {
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = theme.rankStroke;
+    }
+    winners.forEach((marble: { hue: number, name: string }, rank: number) => {
       const y = rank * this.fontHeight;
       if (y >= startY && y <= startY + ctx.canvas.height) {
-        ctx.fillStyle = marble.color;
+        ctx.fillStyle = `hsl(${marble.hue} 100% ${theme.marbleLightness}`;
+        ctx.strokeText(
+          `${rank === winnerRank ? '☆' : '\u2714'} ${marble.name} #${rank + 1}`,
+          startX,
+          20 + y,
+        );
         ctx.fillText(
           `${rank === winnerRank ? '☆' : '\u2714'} ${marble.name} #${rank + 1}`,
           startX,
@@ -61,10 +105,15 @@ export class RankRenderer implements UIObject {
       }
     });
     ctx.font = '10pt sans-serif';
-    marbles.forEach((marble: { color: string; name: string }, rank: number) => {
+    marbles.forEach((marble: { hue: number; name: string }, rank: number) => {
       const y = (rank + winners.length) * this.fontHeight;
       if (y >= startY && y <= startY + ctx.canvas.height) {
-        ctx.fillStyle = marble.color;
+        ctx.fillStyle = `hsl(${marble.hue} 100% ${theme.marbleLightness}`;
+        ctx.strokeText(
+          `${marble.name} #${rank + 1 + winners.length}`,
+          startX,
+          20 + y,
+        );
         ctx.fillText(
           `${marble.name} #${rank + 1 + winners.length}`,
           startX,
