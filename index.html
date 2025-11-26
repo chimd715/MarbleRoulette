@@ -142,6 +142,53 @@
         &.bomb {
           mask-image: url('assets/images/bomb.svg');
         }
+
+        &.download {
+          mask-image: url('assets/images/download.svg');
+        }
+      }
+
+      .download-dropdown {
+        position: relative;
+        display: inline-block;
+
+        .dropdown-content {
+          display: none;
+          position: absolute;
+          bottom: calc(100% - 5px);
+          left: 0;
+          background: #333;
+          border-radius: 5px;
+          min-width: 80px;
+          box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
+          z-index: 1000;
+          padding-bottom: 5px;
+
+          button {
+            width: 100%;
+            text-align: left;
+            padding: 8px 12px;
+            border-radius: 0;
+            background: transparent;
+
+            &:hover {
+              background: #444;
+            }
+
+            &:first-child {
+              border-radius: 5px 5px 0 0;
+            }
+
+            &:last-child {
+              border-radius: 0;
+            }
+          }
+        }
+
+        &:hover .dropdown-content,
+        &.open .dropdown-content {
+          display: block;
+        }
       }
 
       div.left {
@@ -331,6 +378,114 @@
   gtag('js', new Date());
   gtag('config', 'G-5899C1DJM0');
 
+  // 결과 다운로드 기능
+  function getResultsData() {
+    const winners = window.roullete._winners || [];
+    const remaining = window.roullete._marbles || [];
+    const allResults = [];
+
+    // 완주자 추가
+    winners.forEach((m, i) => {
+      allResults.push({ rank: i + 1, name: m.name, status: 'Finished' });
+    });
+
+    // 남은 마블 추가 (현재 순위순)
+    remaining.forEach((m, i) => {
+      allResults.push({ rank: winners.length + i + 1, name: m.name, status: 'Racing' });
+    });
+
+    return allResults;
+  }
+
+  function downloadAsTxt() {
+    const results = getResultsData();
+    if (results.length === 0) {
+      alert('No results to download');
+      return;
+    }
+
+    const lines = results.map(r => `${r.rank}. ${r.name}`);
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+    downloadBlob(blob, 'marble_results.txt');
+  }
+
+  function downloadAsCsv() {
+    const results = getResultsData();
+    if (results.length === 0) {
+      alert('No results to download');
+      return;
+    }
+
+    const lines = ['Rank,Name'];
+    results.forEach(r => {
+      // CSV 이스케이프: 쉼표나 따옴표가 있으면 따옴표로 감싸기
+      const name = r.name.includes(',') || r.name.includes('"')
+        ? `"${r.name.replace(/"/g, '""')}"`
+        : r.name;
+      lines.push(`${r.rank},${name}`);
+    });
+
+    // BOM 추가 (Excel에서 한글 인식용)
+    const bom = '\uFEFF';
+    const blob = new Blob([bom + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    downloadBlob(blob, 'marble_results.csv');
+  }
+
+  function downloadAsXlsx() {
+    const results = getResultsData();
+    if (results.length === 0) {
+      alert('No results to download');
+      return;
+    }
+
+    // 간단한 XML 기반 Excel 파일 생성 (SpreadsheetML)
+    const xmlHeader = '<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?>';
+    const workbookStart = '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">';
+    const workbookEnd = '</Workbook>';
+    const worksheetStart = '<Worksheet ss:Name="Results"><Table>';
+    const worksheetEnd = '</Table></Worksheet>';
+
+    let rows = '';
+
+    // 헤더 행
+    rows += '<Row>';
+    rows += '<Cell><Data ss:Type="String">Rank</Data></Cell>';
+    rows += '<Cell><Data ss:Type="String">Name</Data></Cell>';
+    rows += '</Row>';
+
+    // 데이터 행
+    results.forEach(r => {
+      rows += '<Row>';
+      rows += `<Cell><Data ss:Type="Number">${r.rank}</Data></Cell>`;
+      rows += `<Cell><Data ss:Type="String">${escapeXml(r.name)}</Data></Cell>`;
+      rows += '</Row>';
+    });
+
+    const xml = xmlHeader + workbookStart + worksheetStart + rows + worksheetEnd + workbookEnd;
+    const blob = new Blob([xml], { type: 'application/vnd.ms-excel' });
+    downloadBlob(blob, 'marble_results.xls');
+  }
+
+  function escapeXml(str) {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+  }
+
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   function getNames() {
     const value = document.querySelector('#in_names').value.trim();
     return value.split(/[,\r\n]/g).map(v => v.trim()).filter(v => !!v);
@@ -446,6 +601,20 @@
       getReady();
     });
 
+    // 다운로드 버튼 이벤트
+    document.querySelector('#btnDownloadTxt').addEventListener('click', (e) => {
+      e.stopPropagation();
+      downloadAsTxt();
+    });
+    document.querySelector('#btnDownloadCsv').addEventListener('click', (e) => {
+      e.stopPropagation();
+      downloadAsCsv();
+    });
+    document.querySelector('#btnDownloadXls').addEventListener('click', (e) => {
+      e.stopPropagation();
+      downloadAsXlsx();
+    });
+
     document.querySelector('#btnStart').addEventListener('click', () => {
       if (!ready) return;
       gtag && gtag('event', 'start', {
@@ -559,6 +728,17 @@
     <h3 data-trans>Enter names below</h3>
     <textarea id="in_names" placeholder="Input names separated by commas or line feed here" data-trans="placeholder">짱구*5, 짱아*10, 봉미선*3</textarea>
     <div class="actions">
+      <div class="download-dropdown" id="downloadDropdown">
+        <button id="btnDownload">
+          <i class="icon download"></i>
+          <span data-trans>Download</span>
+        </button>
+        <div class="dropdown-content">
+          <button id="btnDownloadTxt">.txt</button>
+          <button id="btnDownloadCsv">.csv</button>
+          <button id="btnDownloadXls">.xlsx</button>
+        </div>
+      </div>
       <div class="sep"></div>
       <button id="btnShuffle">
         <i class="icon shuffle"></i>
