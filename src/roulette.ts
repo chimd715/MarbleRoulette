@@ -78,7 +78,6 @@ export class Roulette extends EventTarget {
     }
     if (obj.onMessage) {
       obj.onMessage((msg) => {
-        console.log('onMessage', msg);
         this.dispatchEvent(new CustomEvent('message', { detail: msg }));
       });
     }

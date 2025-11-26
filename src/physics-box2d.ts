@@ -17,7 +17,6 @@ export class Box2dPhysics implements IPhysics {
     this.Box2D = await Box2DFactory();
     this.gravity = new this.Box2D.b2Vec2(0, 10);
     this.world = new this.Box2D.b2World(this.gravity);
-    console.log('box2d ready');
   }
 
   clear(): void {

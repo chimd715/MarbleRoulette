@@ -48,9 +48,7 @@ function setLocale(newLocale: string) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('localization loaded');
   const browserLocale = getBrowserLocale();
-  console.log('detected locale: ', browserLocale);
   setLocale(browserLocale);
 });
 

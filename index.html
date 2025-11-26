@@ -113,11 +113,9 @@
 
   function initialize() {
     if (!window.roulette || !window.roulette.isReady) {
-      console.log('does not loaded yet');
       setTimeout(initialize, 100);
       return;
     }
-    console.log('initializing start');
 
     const urlParams = new URLSearchParams(window.location.search);
     const namesFromUrl = urlParams.get('names');
@@ -240,7 +238,6 @@
       toast.innerHTML = msg;
 
       if (window.translateElement) {
-        console.log('try to translate');
         window.translateElement(toast);
       }
 
