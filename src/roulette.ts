@@ -16,7 +16,6 @@ import { VideoRecorder } from './utils/videoRecorder';
 import { IPhysics } from './IPhysics';
 import { Box2dPhysics } from './physics-box2d';
 import { MouseEventHandlerName, MouseEventName } from './types/mouseEvents.type';
-import { FastForwader } from './fastForwader';
 import { ColorTheme } from './types/ColorTheme';
 
 export class Roulette extends EventTarget {
@@ -52,7 +51,6 @@ export class Roulette extends EventTarget {
   private physics!: IPhysics;
 
   private _isReady: boolean = false;
-  private fastForwarder!: FastForwader;
   private _theme: ColorTheme = Themes.dark;
 
   get isReady() {
@@ -91,7 +89,7 @@ export class Roulette extends EventTarget {
     if (!this._lastTime) this._lastTime = Date.now();
     const currentTime = Date.now();
 
-    this._elapsed += (currentTime - this._lastTime) * this._speed * this.fastForwarder.speed;
+    this._elapsed += (currentTime - this._lastTime) * this._speed;
     if (this._elapsed > 100) {
       this._elapsed %= 100;
     }
@@ -248,8 +246,6 @@ export class Roulette extends EventTarget {
       }
     });
     this.addUiObject(minimap);
-    this.fastForwarder = new FastForwader();
-    this.addUiObject(this.fastForwarder);
     this._stage = stages[0];
     this._loadMap();
   }

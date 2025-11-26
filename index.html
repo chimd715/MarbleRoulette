@@ -190,12 +190,6 @@
       window.roulette.setWinningRank(window.options.winningRank);
     });
 
-    document.querySelector('#chkDarkMode').addEventListener('change', (e) => {
-      window.options.darkMode = e.target.matches(':checked');
-      window.roulette.setTheme(window.options.darkMode ? 'dark' : 'light');
-      document.documentElement.classList.toggle('light', !window.options.darkMode);
-    });
-
     document.querySelector('#in_winningRank').addEventListener('change', (e) => {
       const v = parseInt(e.target.value, 10);
       winnerType = 'custom';
@@ -367,11 +361,6 @@
         <span data-trans>Using skills</span>
       </label>
       <input type="checkbox" id="chkSkill" checked />
-      <div class='theme'>
-        <i class='icon sun'></i>
-        <input type='checkbox' id='chkDarkMode' checked />
-        <i class='icon moon'></i>
-      </div>
     </div>
   </div>
   <div class="left">

@@ -4,7 +4,7 @@ import {
   Translations,
 } from './data/languages';
 
-const defaultLocale: TranslatedLanguages = 'en';
+const defaultLocale: TranslatedLanguages = 'ko';
 let locale: TranslatedLanguages | undefined;
 
 function getBrowserLocale() {
