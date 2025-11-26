@@ -1,5 +1,26 @@
+# IDE
 .idea
+.vscode
+
+# Dependencies
 node_modules
+
+# Build
 .parcel-cache
 dist
+
+# Logs
 yarn-error.log
+*.log
+
+# Test results
+test-results
+playwright-report
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
