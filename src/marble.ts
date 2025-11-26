@@ -234,4 +234,17 @@ export class Marble {
     );
     ctx.stroke();
   }
+
+  setSkillCooldown(ms: number) {
+    this._maxCoolTime = ms;
+    this._coolTime = Math.min(this._coolTime, ms);
+  }
+
+  setSkillProbability(prob: number) {
+    this._skillRate = prob;
+  }
+
+  resetSkillTimer() {
+    this._coolTime = 0;
+  }
 }

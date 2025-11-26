@@ -71,6 +71,33 @@ export class Roulette extends EventTarget {
     return initialZoom * this._camera.zoom;
   }
 
+  public setZoom(zoomLevel: number) {
+    const relativeZoom = Math.max(0.1, Math.min(5, zoomLevel / initialZoom));
+    this._camera.setManualZoomMode(true);
+    this._camera.zoom = relativeZoom;
+  }
+
+  public resetZoom() {
+    this._camera.setManualZoomMode(false);
+    this._camera.zoom = 1;
+  }
+
+  public isManualZoomMode() {
+    return this._camera.isManualZoomMode();
+  }
+
+  public setMinimapZoom(zoom: number) {
+    const minimap = this._uiObjects.find(obj => obj.constructor.name === 'Minimap') as any;
+    if (minimap && minimap.setZoomFactor) {
+      minimap.setZoomFactor(zoom);
+    }
+  }
+
+  public getMinimapZoom(): number {
+    const minimap = this._uiObjects.find(obj => obj.constructor.name === 'Minimap') as any;
+    return minimap && minimap.getZoomFactor ? minimap.getZoomFactor() : 1;
+  }
+
   private addUiObject(obj: UIObject) {
     this._uiObjects.push(obj);
     if (obj.onWheel) {
@@ -429,5 +456,36 @@ export class Roulette extends EventTarget {
     this._stage = stages[index];
     this.setMarbles(names);
     this._camera.initializePosition();
+  }
+
+  public getMarbles() {
+    return this._marbles;
+  }
+
+  public shakeMarble(id: number) {
+    this.physics.shakeMarble(id);
+  }
+
+  public setFrozen(frozen: boolean) {
+    this._marbles.forEach((marble) => {
+      marble.isActive = !frozen;
+    });
+    if (frozen) {
+      this.physics.pause();
+    } else {
+      this.physics.resume();
+    }
+  }
+
+  public setSkillCooldown(ms: number) {
+    this._marbles.forEach(marble => marble.setSkillCooldown(ms));
+  }
+
+  public setSkillProbability(prob: number) {
+    this._marbles.forEach(marble => marble.setSkillProbability(prob));
+  }
+
+  public resetSkillTimers() {
+    this._marbles.forEach(marble => marble.resetSkillTimer());
   }
 }

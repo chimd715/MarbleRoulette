@@ -14,6 +14,7 @@ export class Minimap implements UIObject {
   private _onViewportChangeHandler: ((pos?: VectorLike) => void) | null = null;
   private boundingBox: Rect;
   private mousePosition: { x: number; y: number } | null = null;
+  private _zoomFactor: number = 1;
 
   constructor() {
     this.boundingBox = {
@@ -22,6 +23,14 @@ export class Minimap implements UIObject {
       w: 26 * 4,
       h: 0,
     };
+  }
+
+  setZoomFactor(zoom: number) {
+    this._zoomFactor = Math.max(0.5, Math.min(3, zoom));
+  }
+
+  getZoomFactor() {
+    return this._zoomFactor;
   }
 
   getBoundingBox(): Rect | null {
@@ -50,10 +59,11 @@ export class Minimap implements UIObject {
       x: e.x,
       y: e.y,
     };
+    const scale = 4 * this._zoomFactor;
     if (this._onViewportChangeHandler) {
       this._onViewportChangeHandler({
-        x: this.mousePosition.x / 4,
-        y: this.mousePosition.y / 4,
+        x: this.mousePosition.x / scale,
+        y: this.mousePosition.y / scale,
       });
     }
   }
@@ -62,7 +72,9 @@ export class Minimap implements UIObject {
     if (!ctx) return;
     const { stage } = params;
     if (!stage) return;
-    this.boundingBox.h = stage.goalY * 4;
+    const scale = 4 * this._zoomFactor;
+    this.boundingBox.w = 26 * scale;
+    this.boundingBox.h = stage.goalY * scale;
 
     this.lastParams = params;
 
@@ -70,7 +82,7 @@ export class Minimap implements UIObject {
     ctx.save();
     ctx.fillStyle = params.theme.minimapBackground;
     ctx.translate(10, 10);
-    ctx.scale(4, 4);
+    ctx.scale(scale, scale);
     ctx.fillRect(0, 0, 26, stage.goalY);
 
     this.ctx.lineWidth = 3 / (params.camera.zoom + initialZoom);

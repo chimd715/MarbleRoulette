@@ -10,6 +10,7 @@ export class Camera {
   private _targetZoom: number = 1;
   private _locked = false;
   private _shouldFollowMarbles = false;
+  private _manualZoomMode = false;
 
   get zoom() {
     return this._zoom;
@@ -48,6 +49,14 @@ export class Camera {
 
   startFollowingMarbles() {
     this._shouldFollowMarbles = true;
+  }
+
+  setManualZoomMode(enabled: boolean) {
+    this._manualZoomMode = enabled;
+  }
+
+  isManualZoomMode() {
+    return this._manualZoomMode;
   }
 
   initializePosition() {
@@ -98,6 +107,12 @@ export class Camera {
         ? marbles[targetIndex]
         : marbles[0];
       this.setPosition(targetMarble.position);
+
+      // Skip auto zoom if manual zoom mode is enabled
+      if (this._manualZoomMode) {
+        return;
+      }
+
       if (needToZoom) {
         const goalDist = Math.abs(stage.zoomY - this._position.y);
         this.zoom = Math.max(1, (1 - goalDist / zoomThreshold) * 4);
@@ -105,7 +120,9 @@ export class Camera {
         this.zoom = 1;
       }
     } else {
-      this.zoom = 1;
+      if (!this._manualZoomMode) {
+        this.zoom = 1;
+      }
     }
   }
 

@@ -33,7 +33,1450 @@
   <meta property="og:site_name" content="lazygyu.github.io">
   <meta property="og:type" content="website">
 
-  <link rel='stylesheet' href='assets/style.scss' />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a1a;
+      color: #fefefe;
+      overflow: hidden;
+    }
+
+    /* Game Canvas */
+    canvas {
+      position: fixed;
+      top: 52px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: calc(100% - 52px);
+      z-index: 1;
+    }
+
+    /* Status Bar */
+    .status-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 52px;
+      background: linear-gradient(180deg, rgba(18, 18, 24, 0.95) 0%, rgba(12, 12, 18, 0.95) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 100;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .status-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-center {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .top-bar-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.85);
+      padding: 8px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .top-bar-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .top-bar-btn:active {
+      transform: translateY(0);
+    }
+
+    .top-bar-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .top-bar-btn.active {
+      background: linear-gradient(135deg, #00baff 0%, #0088cc 100%);
+      border-color: transparent;
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(0, 186, 255, 0.3);
+    }
+
+    .top-bar-btn .icon {
+      width: 14px;
+      height: 14px;
+      background: currentColor;
+      mask-repeat: no-repeat;
+      mask-position: center;
+      mask-size: contain;
+    }
+
+    .icon.gear { mask-image: url('assets/images/gear.svg'); -webkit-mask-image: url('assets/images/gear.svg'); }
+    .icon.trophy { mask-image: url('assets/images/trophy.svg'); -webkit-mask-image: url('assets/images/trophy.svg'); }
+    .icon.shuffle { mask-image: url('assets/images/shuffle.svg'); -webkit-mask-image: url('assets/images/shuffle.svg'); }
+    .icon.play { mask-image: url('assets/images/play.svg'); -webkit-mask-image: url('assets/images/play.svg'); }
+    .icon.record { mask-image: url('assets/images/record.svg'); -webkit-mask-image: url('assets/images/record.svg'); }
+    .icon.timer-pause { mask-image: url('assets/images/timer_pause.svg'); -webkit-mask-image: url('assets/images/timer_pause.svg'); }
+    .icon.replay { mask-image: url('assets/images/replay.svg'); -webkit-mask-image: url('assets/images/replay.svg'); }
+    .icon.fast-rewind { mask-image: url('assets/images/fast_rewind.svg'); -webkit-mask-image: url('assets/images/fast_rewind.svg'); }
+    .icon.fast-forward { mask-image: url('assets/images/fast_forward.svg'); -webkit-mask-image: url('assets/images/fast_forward.svg'); }
+    .icon.earthquake { mask-image: url('assets/images/earthquake.svg'); -webkit-mask-image: url('assets/images/earthquake.svg'); }
+    .icon.redo { mask-image: url('assets/images/redo.svg'); -webkit-mask-image: url('assets/images/redo.svg'); }
+    .icon.map { mask-image: url('assets/images/map.svg'); -webkit-mask-image: url('assets/images/map.svg'); }
+    .icon.bomb { mask-image: url('assets/images/bomb.svg'); -webkit-mask-image: url('assets/images/bomb.svg'); }
+    .icon.download { mask-image: url('assets/images/download.svg'); -webkit-mask-image: url('assets/images/download.svg'); }
+
+    .top-bar-speed-display {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 56px;
+      height: 32px;
+      font-size: 13px;
+      font-weight: 600;
+      background: rgba(0, 186, 255, 0.1);
+      border: 1px solid rgba(0, 186, 255, 0.2);
+      border-radius: 8px;
+      padding: 0 12px;
+      margin: 0 4px;
+      user-select: none;
+      color: #00baff;
+    }
+
+    .status-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Settings Panel (Bottom Input) */
+    #settings {
+      position: fixed;
+      bottom: 2rem;
+      left: 1rem;
+      background: linear-gradient(180deg, rgba(18, 18, 24, 0.95) 0%, rgba(12, 12, 18, 0.95) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 16px;
+      padding: 16px;
+      z-index: 999;
+      min-width: 50%;
+      display: flex;
+      visibility: visible;
+      opacity: 1;
+      transition: visibility 0s, opacity 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    #settings.hide {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    #settings h3 {
+      padding: 0;
+      margin: 0 0 8px 0;
+      font-size: 13px;
+      font-weight: 600;
+      color: #00baff;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    #settings textarea {
+      width: 100%;
+      min-height: 5rem;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.06);
+      font-size: 14px;
+      padding: 12px;
+      border-radius: 10px;
+      color: #ffffff;
+      resize: vertical;
+      transition: all 0.2s ease;
+    }
+
+    #settings textarea::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    #settings textarea:focus {
+      outline: none;
+      border-color: #00baff;
+      background: rgba(0, 186, 255, 0.08);
+      box-shadow: 0 0 0 3px rgba(0, 186, 255, 0.15);
+    }
+
+    #settings button {
+      color: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      padding: 8px 14px;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    #settings button:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    #settings button:active {
+      transform: translateY(0);
+    }
+
+    #settings button:active:after {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    #settings .icon {
+      background: currentColor;
+      mask-repeat: no-repeat;
+      mask-position: center center;
+      mask-size: contain;
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      vertical-align: middle;
+    }
+
+    #settings div.left {
+      flex-grow: 1;
+      flex-shrink: 1;
+      order: 1;
+    }
+
+    #settings div.left .actions {
+      display: flex;
+      align-items: center;
+      justify-content: stretch;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    #settings div.left .actions div.sep {
+      flex-grow: 1;
+    }
+
+    #settings div.right {
+      order: 2;
+      flex-grow: 0;
+      flex-shrink: 0;
+      margin-left: 16px;
+    }
+
+    #settings div.right div.row {
+      display: flex;
+      align-items: center;
+      height: 38px;
+    }
+
+    #settings div.right div.row label {
+      width: 140px;
+      flex-grow: 0;
+      flex-shrink: 0;
+      padding-left: 0.5rem;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    #settings select {
+      height: 32px;
+      width: 100%;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      padding: 0 12px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' fill-opacity='0.6' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 30px;
+    }
+
+    #settings select:hover {
+      border-color: rgba(255, 255, 255, 0.25);
+      background-color: rgba(255, 255, 255, 0.08);
+    }
+
+    #settings select:focus {
+      outline: none;
+      border-color: #00baff;
+    }
+
+    #settings select option {
+      background: #1a1a24;
+      color: #ffffff;
+    }
+
+    #settings input[type=checkbox] {
+      width: 44px;
+      display: inline-block;
+      height: 24px;
+      position: relative;
+      vertical-align: middle;
+      appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+      background: transparent;
+    }
+
+    #settings input[type=checkbox]:before {
+      position: absolute;
+      content: '';
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      top: 0;
+      left: 0;
+      transition: all 0.3s ease;
+    }
+
+    #settings input[type=checkbox]:after {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      content: '';
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      background: #ffffff;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    #settings input[type=checkbox]:checked:after {
+      left: 23px;
+    }
+
+    #settings input[type=checkbox]:checked:before {
+      background: linear-gradient(135deg, #00baff 0%, #0088cc 100%);
+      border-color: #00baff;
+    }
+
+    #settings .btn-group {
+      display: flex;
+      justify-content: stretch;
+      gap: 2px;
+    }
+
+    #settings .btn-group > * {
+      box-sizing: border-box;
+      flex-grow: 0;
+      flex-shrink: 0;
+      overflow: hidden;
+      height: 32px;
+      width: 33%;
+      border-radius: 0;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-right: none;
+      padding: 0;
+      color: rgba(255, 255, 255, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    #settings .btn-group > *:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+    }
+
+    #settings .btn-group > *:first-child {
+      border-radius: 8px 0 0 8px;
+    }
+
+    #settings .btn-group > *:last-child {
+      border-radius: 0 8px 8px 0;
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    #settings .btn-group .active:before {
+      content: '';
+      width: 12px;
+      height: 12px;
+      display: inline-block;
+      vertical-align: middle;
+      mask-image: url('assets/images/check.svg');
+      mask-repeat: no-repeat;
+      background: white;
+      margin-right: 4px;
+    }
+
+    #settings .btn-group .active {
+      background: linear-gradient(135deg, #00baff 0%, #0088cc 100%);
+      border-color: transparent;
+      color: #ffffff;
+    }
+
+    #settings .btn-group input[type=number] {
+      box-sizing: border-box;
+      text-align: center;
+      width: 33%;
+      border: none;
+      background: rgba(255, 255, 255, 0.06);
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    #settings .btn-group input[type=number]:focus {
+      outline: none;
+      background: rgba(0, 186, 255, 0.15);
+    }
+
+    /* Download Dropdown */
+    .download-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .download-dropdown .dropdown-content {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 0;
+      background: linear-gradient(180deg, rgba(30, 30, 40, 0.98) 0%, rgba(20, 20, 28, 0.98) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 12px;
+      min-width: 120px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      z-index: 1000;
+      padding: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .download-dropdown:hover .dropdown-content {
+      display: block;
+    }
+
+    .download-dropdown .dropdown-content button {
+      width: 100%;
+      padding: 10px 14px;
+      border: none;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.85);
+      text-align: left;
+      cursor: pointer;
+      display: block;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .download-dropdown .dropdown-content button:hover {
+      background: rgba(0, 186, 255, 0.15);
+      color: #00baff;
+    }
+
+    .download-dropdown .dropdown-content button:first-child {
+      border-radius: 8px;
+    }
+
+    /* Mobile Responsive */
+    @media screen and (max-width: 750px) {
+      #settings {
+        bottom: calc(2.5rem + 30px);
+        display: block;
+        min-width: 0;
+        max-width: 100%;
+        width: calc(100% - 2rem);
+        overflow: hidden;
+      }
+
+      #settings div.right div.row {
+        height: auto;
+        display: block;
+        border-bottom: 1px solid #555;
+        padding: .5rem 0;
+      }
+
+      #settings div.right div.row label {
+        width: 100%;
+        margin-bottom: .5rem;
+        padding-left: 0;
+        display: block;
+      }
+
+      #settings div.right div.row .icon {
+        width: 15px;
+        height: 15px;
+      }
+    }
+
+    /* Probability Display */
+    #probabilityDisplay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(180deg, rgba(18, 18, 24, 0.98) 0%, rgba(12, 12, 18, 0.98) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 28px;
+      z-index: 1000;
+      max-width: 90%;
+      max-height: 80%;
+      overflow-y: auto;
+      display: none;
+      color: white;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    #probabilityDisplay::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #probabilityDisplay::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    #probabilityDisplay::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 3px;
+    }
+
+    .probability-header {
+      text-align: center;
+      margin-bottom: 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .probability-header h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: #ffffff;
+      flex: 1;
+    }
+
+    .hide-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.7);
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .hide-btn:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .probability-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .probability-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      transition: all 0.2s ease;
+    }
+
+    .probability-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .probability-item:last-child {
+      border-bottom: none;
+    }
+
+    .probability-name {
+      flex: 0 0 auto;
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.9);
+      min-width: 100px;
+      max-width: 140px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .probability-bar {
+      flex: 1;
+      min-width: 120px;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .probability-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00baff 0%, #0088cc 100%);
+      border-radius: 4px;
+      transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .probability-value {
+      flex: 0 0 60px;
+      text-align: right;
+      font-size: 14px;
+      font-weight: 600;
+      color: #00baff;
+    }
+
+    /* Game Result Display */
+    #gameResultDisplay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(180deg, rgba(18, 18, 24, 0.98) 0%, rgba(12, 12, 18, 0.98) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 28px;
+      z-index: 1001;
+      min-width: 320px;
+      max-width: 90%;
+      max-height: 80%;
+      overflow-y: auto;
+      display: none;
+      color: white;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    #gameResultDisplay::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #gameResultDisplay::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    #gameResultDisplay::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 3px;
+    }
+
+    .result-header {
+      text-align: center;
+      margin-bottom: 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    .result-header h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .result-header-actions {
+      position: absolute;
+      right: 0;
+      top: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 100%;
+      padding-bottom: 16px;
+    }
+
+    .winner-section {
+      text-align: center;
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .winner-trophy {
+      font-size: 64px;
+      line-height: 1;
+      margin-bottom: 12px;
+      animation: trophy-bounce 0.6s ease-out;
+    }
+
+    @keyframes trophy-bounce {
+      0% { transform: scale(0.5); opacity: 0; }
+      60% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .winner-name {
+      font-size: 28px;
+      font-weight: 700;
+      color: #ffd700;
+      text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+      margin-bottom: 4px;
+    }
+
+    .winner-label {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.6);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .podium-section {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 12px;
+      padding: 16px 0;
+    }
+
+    .podium-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 80px;
+    }
+
+    .podium-medal {
+      font-size: 24px;
+      margin-bottom: 6px;
+    }
+
+    .podium-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.9);
+      text-align: center;
+      margin-bottom: 8px;
+      max-width: 90px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .podium-bar {
+      width: 70px;
+      border-radius: 6px 6px 0 0;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 8px;
+      font-size: 16px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .podium-item.first .podium-bar {
+      height: 80px;
+      background: linear-gradient(180deg, rgba(255, 215, 0, 0.4) 0%, rgba(255, 215, 0, 0.2) 100%);
+      border: 1px solid rgba(255, 215, 0, 0.5);
+    }
+
+    .podium-item.second .podium-bar {
+      height: 60px;
+      background: linear-gradient(180deg, rgba(192, 192, 192, 0.4) 0%, rgba(192, 192, 192, 0.2) 100%);
+      border: 1px solid rgba(192, 192, 192, 0.5);
+    }
+
+    .podium-item.third .podium-bar {
+      height: 45px;
+      background: linear-gradient(180deg, rgba(205, 127, 50, 0.4) 0%, rgba(205, 127, 50, 0.2) 100%);
+      border: 1px solid rgba(205, 127, 50, 0.5);
+    }
+
+    .result-download-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .result-download-dropdown .download-trigger {
+      width: 32px;
+      height: 32px;
+      background: rgba(0, 186, 255, 0.1);
+      border: 1px solid rgba(0, 186, 255, 0.3);
+      border-radius: 8px;
+      color: #00baff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .result-download-dropdown .download-trigger .icon {
+      width: 16px;
+      height: 16px;
+      background: currentColor;
+      mask-repeat: no-repeat;
+      mask-position: center;
+      mask-size: contain;
+      -webkit-mask-repeat: no-repeat;
+      -webkit-mask-position: center;
+      -webkit-mask-size: contain;
+    }
+
+    .result-download-dropdown .download-trigger:hover {
+      background: rgba(0, 186, 255, 0.2);
+      border-color: rgba(0, 186, 255, 0.5);
+    }
+
+    .result-download-dropdown .dropdown-content {
+      display: none;
+      position: absolute;
+      top: calc(100% - 4px);
+      left: 0;
+      background: linear-gradient(180deg, rgba(30, 30, 40, 0.98) 0%, rgba(20, 20, 28, 0.98) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 12px;
+      min-width: 100px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      z-index: 1002;
+      padding: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .result-download-dropdown:hover .dropdown-content {
+      display: block;
+    }
+
+    .result-download-dropdown .dropdown-content button {
+      width: 100%;
+      padding: 10px 14px;
+      border: none;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.85);
+      text-align: left;
+      cursor: pointer;
+      display: block;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .result-download-dropdown .dropdown-content button:hover {
+      background: rgba(0, 186, 255, 0.15);
+      color: #00baff;
+    }
+
+    /* Main Map Zoom Controls */
+    .main-map-zoom-controls {
+      position: fixed;
+      left: 16px;
+      top: 68px;
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .main-map-zoom-btn {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(180deg, rgba(18, 18, 24, 0.9) 0%, rgba(12, 12, 18, 0.9) 100%);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 186, 255, 0.3);
+      color: #00baff;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      font-size: 18px;
+      font-weight: 300;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .main-map-zoom-btn:hover {
+      background: linear-gradient(135deg, #00baff 0%, #0088cc 100%);
+      color: #ffffff;
+      border-color: transparent;
+      transform: scale(1.05);
+      box-shadow: 0 4px 16px rgba(0, 186, 255, 0.4);
+    }
+
+    .main-map-zoom-btn:active {
+      transform: scale(0.95);
+    }
+
+    .main-map-zoom-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* In-Game Controls */
+    #inGame {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 200;
+      display: none;
+    }
+
+    #inGame button {
+      padding: 14px 28px;
+      background: linear-gradient(135deg, #00baff 0%, #0088cc 100%);
+      border: none;
+      color: #ffffff;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(0, 186, 255, 0.35);
+      transition: all 0.2s ease;
+    }
+
+    #inGame button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(0, 186, 255, 0.45);
+    }
+
+    #inGame button:active {
+      transform: translateY(0);
+    }
+
+    /* Settings Panel */
+    .side-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 340px;
+      height: 100vh;
+      background: linear-gradient(180deg, rgba(18, 18, 24, 0.98) 0%, rgba(12, 12, 18, 0.98) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      z-index: 1000;
+      transform: translateX(100%);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: -8px 0 32px rgba(0, 0, 0, 0.5);
+      border-left: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .side-panel.open {
+      transform: translateX(0);
+    }
+
+    .side-panel .panel-header {
+      padding: 20px 24px;
+      background: linear-gradient(180deg, rgba(0, 186, 255, 0.08) 0%, transparent 100%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .side-panel .panel-header h3 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+    }
+
+    .close-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.7);
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .close-btn:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: scale(1.05);
+    }
+
+    .side-panel .panel-content {
+      padding: 24px;
+      height: calc(100% - 80px);
+      overflow-y: auto;
+    }
+
+    .side-panel .panel-content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .side-panel .panel-content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .side-panel .panel-content::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 3px;
+    }
+
+    .side-panel .panel-content::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .settings-section {
+      margin-bottom: 28px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .settings-section h4 {
+      margin: 0 0 16px 0;
+      font-size: 13px;
+      font-weight: 600;
+      color: #00baff;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .setting-item {
+      margin-bottom: 16px;
+    }
+
+    .setting-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .setting-item label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .setting-item input[type="checkbox"] {
+      width: 44px;
+      height: 24px;
+      appearance: none;
+      -webkit-appearance: none;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .setting-item input[type="checkbox"]:checked {
+      background: linear-gradient(135deg, #00baff 0%, #0088cc 100%);
+      border-color: #00baff;
+    }
+
+    .setting-item input[type="checkbox"]::before {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      background: #ffffff;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    .setting-item input[type="checkbox"]:checked::before {
+      left: 22px;
+    }
+
+    .setting-item input[type="range"] {
+      width: 100%;
+      height: 6px;
+      appearance: none;
+      -webkit-appearance: none;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      outline: none;
+      margin: 8px 0;
+    }
+
+    .setting-item input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #00baff 0%, #0088cc 100%);
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 186, 255, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    .setting-item input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 12px rgba(0, 186, 255, 0.6);
+    }
+
+    .setting-item input[type="number"] {
+      width: 70px;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      border-radius: 8px;
+      font-size: 14px;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+
+    .setting-item input[type="number"]:focus {
+      outline: none;
+      border-color: #00baff;
+      background: rgba(0, 186, 255, 0.08);
+      box-shadow: 0 0 0 3px rgba(0, 186, 255, 0.15);
+    }
+
+    .setting-item select {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      border-radius: 10px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' fill-opacity='0.6' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      padding-right: 40px;
+    }
+
+    .setting-item select:hover {
+      border-color: rgba(255, 255, 255, 0.25);
+      background-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .setting-item select:focus {
+      outline: none;
+      border-color: #00baff;
+      box-shadow: 0 0 0 3px rgba(0, 186, 255, 0.15);
+    }
+
+    .setting-item select option {
+      background: #1a1a24;
+      color: #ffffff;
+      padding: 12px;
+    }
+
+    .winner-buttons {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .winner-btn {
+      padding: 10px 16px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.7);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .winner-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+    }
+
+    .winner-btn.active {
+      background: linear-gradient(135deg, #00baff 0%, #0088cc 100%);
+      color: #ffffff;
+      border-color: transparent;
+      box-shadow: 0 4px 12px rgba(0, 186, 255, 0.3);
+    }
+
+    .minimap-zoom-controls-settings {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .control-btn.small {
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: 300;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .control-btn.small:hover {
+      background: rgba(0, 186, 255, 0.15);
+      border-color: rgba(0, 186, 255, 0.3);
+      color: #00baff;
+      transform: translateY(-2px);
+    }
+
+    .control-btn.small:active {
+      transform: translateY(0);
+    }
+
+    .control-btn.small:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .minimap-zoom-display {
+      min-width: 60px;
+      text-align: center;
+      padding: 10px 14px;
+      background: rgba(0, 186, 255, 0.1);
+      border: 1px solid rgba(0, 186, 255, 0.2);
+      border-radius: 10px;
+      font-size: 14px;
+      color: #00baff;
+      font-weight: 600;
+    }
+
+    .speed-display {
+      text-align: center;
+      padding: 12px;
+      background: rgba(0, 186, 255, 0.1);
+      border: 1px solid rgba(0, 186, 255, 0.2);
+      border-radius: 10px;
+      font-size: 14px;
+      color: #00baff;
+      font-weight: 600;
+    }
+
+    .setting-item span[id$="Value"] {
+      display: inline-block;
+      min-width: 36px;
+      padding: 6px 10px;
+      background: rgba(0, 186, 255, 0.1);
+      border-radius: 6px;
+      font-size: 13px;
+      color: #00baff;
+      font-weight: 600;
+      text-align: center;
+      margin-left: auto;
+    }
+
+    .setting-item.toggle-item label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      margin-bottom: 0;
+    }
+
+    .setting-item.toggle-item label span {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .setting-item.range-item label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .setting-item.range-item label span:first-child {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    /* Copyright */
+    .copyright {
+      position: fixed;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 11px;
+      z-index: 999;
+      width: 90%;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .copyright a {
+      color: rgba(255, 255, 255, 0.6);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .copyright a:hover {
+      color: #00baff;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #00baff 0%, #0088cc 100%);
+      color: #ffffff;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 2000;
+      animation: fadeInOut 1.5s ease;
+      box-shadow: 0 8px 32px rgba(0, 186, 255, 0.4);
+    }
+
+    @keyframes fadeInOut {
+      0%, 100% { opacity: 0; transform: translate(-50%, -10px); }
+      15%, 85% { opacity: 1; transform: translate(-50%, 0); }
+    }
+
+    /* Responsive Design */
+    @media screen and (max-width: 768px) {
+      .control-panel .panel-content {
+        padding: 15px;
+        max-height: 250px;
+      }
+
+      #probabilityDisplay {
+        max-width: 95%;
+        padding: 20px;
+      }
+
+      .probability-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+
+      .probability-name {
+        min-width: auto;
+        text-align: center;
+      }
+
+      .probability-value {
+        text-align: center;
+        flex: none;
+      }
+    }
+
+    @media screen and (max-width: 480px) {
+      .status-bar {
+        padding: 0 10px;
+        font-size: 12px;
+      }
+
+      .status-right {
+        gap: 10px;
+      }
+    }
+  </style>
 </head>
 <body>
 <script type="module" src="./src/index.ts"></script>
@@ -72,6 +1515,14 @@
     window.roulette.setMarbles(names);
     ready = names.length > 0;
     localStorage.setItem('mbr_names', names.join(','));
+
+    // Update participant count
+    updateParticipantCount();
+
+    // Only show probability display if setting is enabled
+    const showProbabilityDefault = localStorage.getItem('showProbabilityDefault') === 'true';
+    if (showProbabilityDefault) updateProbabilityDisplay();
+
     switch (winnerType) {
       case 'first':
         setWinnerRank(1);
@@ -80,36 +1531,347 @@
         const total = window.roulette.getCount();
         setWinnerRank(total);
         break;
+      case 'custom':
+        // Keep the current custom rank, just re-apply it
+        const currentRank = parseInt(document.querySelector('#in_winningRank').value, 10);
+        if (!isNaN(currentRank) && currentRank > 0) {
+          setWinnerRank(currentRank);
+        }
+        break;
     }
+  }
+
+  function updateParticipantCount() {
+    const names = getNames();
+    let totalCount = 0;
+    names.forEach(nameStr => {
+      const parsed = parseName(nameStr);
+      totalCount += parsed.count;
+    });
+    const countEl = document.querySelector('.participant-count');
+    if (countEl) countEl.textContent = totalCount;
+  }
+
+  function calculateProbabilities() {
+    const names = getNames();
+    if (names.length === 0) return [];
+
+    const members = names
+      .map((nameString) => {
+        const result = parseName(nameString);
+        if (!result || !result.name) return null;
+        return result;
+      })
+      .filter((member) => !!member);
+
+    if (members.length === 0) return [];
+
+    let maxWeight = -Infinity;
+    let minWeight = Infinity;
+
+    members.forEach((member) => {
+      if (member) {
+        if (member.weight > maxWeight) maxWeight = member.weight;
+        if (member.weight < minWeight) minWeight = member.weight;
+      }
+    });
+
+    const gap = maxWeight - minWeight;
+    let totalCount = 0;
+    let totalWeightedCount = 0;
+
+    const processedMembers = members.map((member) => {
+      if (!member) return null;
+      const normalizedWeight = 0.1 + (gap ? (member.weight - minWeight) / gap : 0);
+      const weightedCount = member.count * normalizedWeight;
+      totalCount += member.count;
+      totalWeightedCount += weightedCount;
+      return {
+        ...member,
+        normalizedWeight,
+        weightedCount
+      };
+    }).filter((member) => !!member);
+
+    if (totalWeightedCount === 0) {
+      return processedMembers.map((member) => {
+        if (!member) return null;
+        const probability = (member.count / totalCount) * 100;
+        return {
+          name: member.name,
+          count: member.count,
+          weight: member.weight,
+          normalizedWeight: member.normalizedWeight,
+          probability: probability
+        };
+      }).filter((member) => !!member);
+    }
+
+    return processedMembers.map((member) => {
+      if (!member) return null;
+      const probability = (member.weightedCount / totalWeightedCount) * 100;
+      return {
+        name: member.name,
+        count: member.count,
+        weight: member.weight,
+        normalizedWeight: member.normalizedWeight,
+        probability: probability
+      };
+    }).filter((member) => !!member);
+  }
+
+  function updateProbabilityDisplay() {
+    const probabilities = calculateProbabilities();
+    const container = document.getElementById('probabilityDisplay');
+
+    if (!container) return;
+
+    if (probabilities.length === 0) {
+      container.innerHTML = '';
+      container.style.display = 'none';
+      return;
+    }
+
+    const sortedProbabilities = probabilities.sort((a, b) => {
+      if (!a || !b) return 0;
+      return b.probability - a.probability;
+    });
+
+    const totalCount = sortedProbabilities.reduce((sum, item) => sum + (item?.count || 0), 0);
+    let html = `<div class="probability-header"><h3 data-trans>Probability per Option</h3><button id="btnHideProbability" class="hide-btn">×</button></div>`;
+    html += '<div class="probability-list">';
+
+    sortedProbabilities.forEach((item, index) => {
+      if (!item) return;
+      const weightText = item.weight > 1 ? ` (weight: ${item.weight})` : '';
+      const countText = item.count > 1 ? ` ×${item.count}` : '';
+      const rankText = index === 0 ? ' 🥇' : index === 1 ? ' 🥈' : index === 2 ? ' 🥉' : '';
+      html += `
+        <div class="probability-item">
+          <div class="probability-name">${item.name}${weightText}${countText}${rankText}</div>
+          <div class="probability-bar">
+            <div class="probability-fill" style="width: ${item.probability}%"></div>
+          </div>
+          <div class="probability-value">${item.probability.toFixed(1)}%</div>
+        </div>
+      `;
+    });
+
+    html += '</div>';
+    container.innerHTML = html;
+    container.style.display = 'block';
+
+    // Apply translation to dynamically generated elements
+    const titleElement = container.querySelector('h3[data-trans]');
+    if (titleElement && window.translateElement) {
+      window.translateElement(titleElement);
+    }
+  }
+
+  function showGameResult() {
+    const container = document.getElementById('gameResultDisplay');
+    if (!window.roulette || !window.roulette._winners) {
+      container.style.display = 'none';
+      return;
+    }
+
+    const winners = window.roulette._winners;
+    if (winners.length === 0) {
+      container.style.display = 'none';
+      return;
+    }
+
+    const winningRank = window.options.winningRank || 0;
+    const winner = winners[winningRank];
+
+    let html = `
+      <div class="result-header">
+        <h3 data-trans>Game Result</h3>
+        <div class="result-header-actions">
+          <div class="result-download-dropdown">
+            <button class="download-trigger">
+              <i class="icon download"></i>
+            </button>
+            <div class="dropdown-content">
+              <button id="resultDownloadTxt">.txt</button>
+              <button id="resultDownloadCsv">.csv</button>
+              <button id="resultDownloadXls">.xlsx</button>
+            </div>
+          </div>
+          <button id="btnHideResult" class="hide-btn">×</button>
+        </div>
+      </div>`;
+
+    // Winner section with big trophy
+    html += `
+      <div class="winner-section">
+        <div class="winner-trophy">🏆</div>
+        <div class="winner-name">${winner ? winner.name : ''}</div>
+        <div class="winner-label">Winner</div>
+      </div>
+    `;
+
+    // Podium section (top 3 only)
+    if (winners.length >= 2) {
+      html += '<div class="podium-section">';
+
+      // 2nd place (left)
+      if (winners[1]) {
+        html += `
+          <div class="podium-item second">
+            <div class="podium-medal">🥈</div>
+            <div class="podium-name">${winners[1].name}</div>
+            <div class="podium-bar">2</div>
+          </div>
+        `;
+      }
+
+      // 1st place (center)
+      if (winners[0]) {
+        html += `
+          <div class="podium-item first">
+            <div class="podium-medal">🥇</div>
+            <div class="podium-name">${winners[0].name}</div>
+            <div class="podium-bar">1</div>
+          </div>
+        `;
+      }
+
+      // 3rd place (right)
+      if (winners[2]) {
+        html += `
+          <div class="podium-item third">
+            <div class="podium-medal">🥉</div>
+            <div class="podium-name">${winners[2].name}</div>
+            <div class="podium-bar">3</div>
+          </div>
+        `;
+      }
+
+      html += '</div>';
+    }
+
+    container.innerHTML = html;
+    container.style.display = 'block';
+
+    // Apply translation to dynamically generated elements
+    const resultTitleElement = container.querySelector('h3[data-trans]');
+    if (resultTitleElement && window.translateElement) {
+      window.translateElement(resultTitleElement);
+    }
+
+    // Add close button event
+    document.getElementById('btnHideResult').addEventListener('click', () => {
+      container.style.display = 'none';
+    });
+
+    // Add download button events
+    document.getElementById('resultDownloadTxt').addEventListener('click', downloadAsTxt);
+    document.getElementById('resultDownloadCsv').addEventListener('click', downloadAsCsv);
+    document.getElementById('resultDownloadXls').addEventListener('click', downloadAsXlsx);
   }
 
   function setWinnerRank(rank) {
-    document.querySelector('#in_winningRank').value = rank;
+    // Update both #settings panel and side panel
+    const inWinningRank = document.querySelector('#in_winningRank');
+    const settingsWinningRank = document.querySelector('#settingsWinningRank');
+
+    if (inWinningRank) inWinningRank.value = rank;
+    if (settingsWinningRank) settingsWinningRank.value = rank;
+
     window.options.winningRank = rank - 1;
     window.roulette.setWinningRank(window.options.winningRank);
 
+    // Update #settings panel buttons
+    const btnFirst = document.querySelector('.btn-first-winner');
+    const btnLast = document.querySelector('.btn-last-winner');
+
     if (winnerType === 'first') {
-      document.querySelector('.btn-first-winner').classList.toggle('active', true);
-      document.querySelector('.btn-last-winner').classList.toggle('active', false);
-      document.querySelector('#in_winningRank').classList.toggle('active', false);
+      if (btnFirst) btnFirst.classList.add('active');
+      if (btnLast) btnLast.classList.remove('active');
+      if (inWinningRank) inWinningRank.classList.remove('active');
     } else if (winnerType === 'last') {
-      document.querySelector('.btn-first-winner').classList.toggle('active', false);
-      document.querySelector('.btn-last-winner').classList.toggle('active', true);
-      document.querySelector('#in_winningRank').classList.toggle('active', false);
+      if (btnFirst) btnFirst.classList.remove('active');
+      if (btnLast) btnLast.classList.add('active');
+      if (inWinningRank) inWinningRank.classList.remove('active');
     } else if (winnerType === 'custom') {
-      document.querySelector('.btn-first-winner').classList.toggle('active', false);
-      document.querySelector('.btn-last-winner').classList.toggle('active', false);
-      document.querySelector('#in_winningRank').classList.toggle('active', true);
+      if (btnFirst) btnFirst.classList.remove('active');
+      if (btnLast) btnLast.classList.remove('active');
+      if (inWinningRank) inWinningRank.classList.add('active');
+    }
+
+    // Update side panel buttons
+    const settingsFirst = document.querySelector('#settingsFirstWinner');
+    const settingsLast = document.querySelector('#settingsLastWinner');
+
+    if (winnerType === 'first') {
+      if (settingsFirst) settingsFirst.classList.add('active');
+      if (settingsLast) settingsLast.classList.remove('active');
+      if (settingsWinningRank) settingsWinningRank.classList.remove('active');
+    } else if (winnerType === 'last') {
+      if (settingsFirst) settingsFirst.classList.remove('active');
+      if (settingsLast) settingsLast.classList.add('active');
+      if (settingsWinningRank) settingsWinningRank.classList.remove('active');
+    } else if (winnerType === 'custom') {
+      if (settingsFirst) settingsFirst.classList.remove('active');
+      if (settingsLast) settingsLast.classList.remove('active');
+      if (settingsWinningRank) settingsWinningRank.classList.add('active');
     }
   }
 
+  function updateSpeedButtons() {
+    const speedUpBtn = document.querySelector('#btnSpeedUpTop');
+    const slowDownBtn = document.querySelector('#btnSlowDownTop');
+    const speedFactorDisplay = document.getElementById('speedFactorDisplay');
+    const speedDisplay = document.querySelector('.speed-display');
+
+    if (speedUpBtn) speedUpBtn.disabled = currentSpeed >= 2.5;
+    if (slowDownBtn) slowDownBtn.disabled = currentSpeed <= 0.1;
+    if (speedFactorDisplay) speedFactorDisplay.textContent = `${currentSpeed.toFixed(1)}x`;
+
+    if (speedDisplay) {
+      const zoomIndicator = window.roulette && window.roulette.isManualZoomMode ?
+        (window.roulette.isManualZoomMode() ? ' (Manual)' : ' (Auto)') : '';
+      speedDisplay.textContent = `Speed: ${currentSpeed.toFixed(1)}x | Zoom: ${currentZoom.toFixed(1)}x${zoomIndicator}`;
+    }
+  }
+
+  function updateZoomDisplay() {
+    const zoomInBtn = document.querySelector('#mainMapZoomIn');
+    const zoomOutBtn = document.querySelector('#mainMapZoomOut');
+    const speedDisplay = document.querySelector('.speed-display');
+
+    if (zoomInBtn) zoomInBtn.disabled = currentZoom >= 5;
+    if (zoomOutBtn) zoomOutBtn.disabled = currentZoom <= 0.1;
+
+    if (speedDisplay) {
+      const zoomIndicator = window.roulette && window.roulette.isManualZoomMode ?
+        (window.roulette.isManualZoomMode() ? ' (Manual)' : ' (Auto)') : '';
+      speedDisplay.textContent = `Speed: ${currentSpeed.toFixed(1)}x | Zoom: ${currentZoom.toFixed(1)}x${zoomIndicator}`;
+    }
+  }
+
+  function updateMinimapZoomDisplay() {
+    if (!window.roulette) return;
+
+    const currentMinimapZoom = window.roulette.getMinimapZoom ? window.roulette.getMinimapZoom() : 1;
+    const zoomInBtn = document.querySelector('#settingsMinimapZoomIn');
+    const zoomOutBtn = document.querySelector('#settingsMinimapZoomOut');
+    const zoomDisplay = document.querySelector('.minimap-zoom-display');
+
+    if (zoomInBtn) zoomInBtn.disabled = currentMinimapZoom >= 3;
+    if (zoomOutBtn) zoomOutBtn.disabled = currentMinimapZoom <= 0.5;
+    if (zoomDisplay) zoomDisplay.textContent = `${currentMinimapZoom.toFixed(1)}x`;
+  }
 
   let ready = false;
   let winnerType = 'last';
+  let isFrozen = false;
+  let currentSpeed = 1;
+  let currentZoom = 1.0;
+  let lastZoomChange = 0;
 
-  document.addEventListener('DOMContentLoaded', () => {
-    initialize();
-  });
+  document.addEventListener('DOMContentLoaded', initialize);
 
   function initialize() {
     if (!window.roulette || !window.roulette.isReady) {
@@ -128,6 +1890,8 @@
         document.querySelector('#in_names').value = savedNames;
       }
     }
+
+    // Input section event listeners
     document.querySelector('#in_names').addEventListener('input', () => {
       getReady();
     });
@@ -163,21 +1927,170 @@
       }
     });
 
-    document.querySelector('#btnShuffle').addEventListener('click', () => {
-      getReady();
+    // Top bar button controls
+    document.querySelector('#btnShowProbabilityTop').addEventListener('click', () => {
+      const probabilityDisplay = document.getElementById('probabilityDisplay');
+      if (probabilityDisplay.style.display === 'block') {
+        probabilityDisplay.style.display = 'none';
+      } else {
+        updateProbabilityDisplay();
+      }
     });
 
-    document.querySelector('#btnStart').addEventListener('click', () => {
-      if (!ready) return;
+    document.querySelector('#btnSettings').addEventListener('click', () => {
+      document.getElementById('settingsPanel').classList.add('open');
+    });
+
+    document.querySelector('#btnSlowDownTop').addEventListener('click', () => {
+      if (window.roulette) {
+        currentSpeed = Math.max(currentSpeed - 0.1, 0.1);
+        if (window.roulette.setSpeed) {
+          window.roulette.setSpeed(currentSpeed);
+        }
+        updateSpeedButtons();
+      }
+    });
+
+    document.querySelector('#btnSpeedUpTop').addEventListener('click', () => {
+      if (window.roulette) {
+        currentSpeed = Math.min(currentSpeed + 0.1, 2.5);
+        if (window.roulette.setSpeed) {
+          window.roulette.setSpeed(currentSpeed);
+        }
+        updateSpeedButtons();
+      }
+    });
+
+    document.querySelector('#btnResetSpeedTop').addEventListener('click', () => {
+      if (window.roulette) {
+        currentSpeed = 1;
+        if (window.roulette.setSpeed) {
+          window.roulette.setSpeed(currentSpeed);
+        }
+        updateSpeedButtons();
+      }
+    });
+
+    // Start game function (shared by top bar and bottom panel)
+    function startGame() {
+      // If game ended and not reset, auto-reset before starting
+      if (!ready) {
+        getReady();
+        if (!ready) return; // Still not ready (e.g., no names entered)
+      }
       gtag && gtag('event', 'start', {
         'event_category': 'roulette',
         'event_label': 'start',
         'value': window.roulette.getCount(),
       });
+      // Disable manual zoom mode when game starts
+      if (window.roulette && window.roulette.resetZoom) {
+        window.roulette.resetZoom();
+        currentZoom = 1.0;
+        updateZoomDisplay();
+      }
+      // Turn off freeze when starting
+      if (isFrozen) {
+        isFrozen = false;
+        const freezeBtn = document.querySelector('#btnFreezeTop');
+        if (freezeBtn) freezeBtn.classList.remove('active');
+        if (window.roulette && window.roulette.setFrozen) {
+          window.roulette.setFrozen(false);
+        }
+      }
       window.roulette.start();
       document.querySelector('#settings').classList.add('hide');
+      document.getElementById('probabilityDisplay').style.display = 'none';
+      document.getElementById('gameResultDisplay').style.display = 'none';
+    }
+
+    // Top bar Start button
+    document.querySelector('#btnStart').addEventListener('click', startGame);
+
+    // Bottom panel Start button
+    document.querySelector('#btnStartBottom').addEventListener('click', startGame);
+
+    document.querySelector('#btnFreezeTop').addEventListener('click', () => {
+      if (window.roulette) {
+        isFrozen = !isFrozen;
+        const button = document.querySelector('#btnFreezeTop');
+        button.classList.toggle('active', isFrozen);
+
+        if (window.roulette.setFrozen) {
+          window.roulette.setFrozen(isFrozen);
+        }
+      }
     });
 
+    document.querySelector('#btnShakeAllTop').addEventListener('click', () => {
+      if (window.roulette && ready) {
+        const marbles = window.roulette.getMarbles ? window.roulette.getMarbles() : [];
+        marbles.forEach((marble) => {
+          if (window.roulette.shakeMarble) {
+            window.roulette.shakeMarble(marble.id);
+          }
+        });
+      }
+    });
+
+    document.querySelector('#btnResetGameTop').addEventListener('click', () => {
+      // Reset game state
+      if (window.roulette && window.roulette.reset) {
+        window.roulette.reset();
+      }
+
+      // Reset zoom
+      if (window.roulette && window.roulette.resetZoom) {
+        window.roulette.resetZoom();
+        currentZoom = 1.0;
+        updateZoomDisplay();
+      }
+
+      // Reset freeze state
+      if (isFrozen) {
+        isFrozen = false;
+        const freezeBtn = document.querySelector('#btnFreezeTop');
+        if (freezeBtn) freezeBtn.classList.remove('active');
+        if (window.roulette && window.roulette.setFrozen) {
+          window.roulette.setFrozen(false);
+        }
+      }
+
+      // Reload marbles and show settings panel
+      getReady();
+      document.querySelector('#settings').classList.remove('hide');
+
+      // Show probability panel if setting is enabled
+      const showProbabilityDefault = localStorage.getItem('showProbabilityDefault') === 'true';
+      if (showProbabilityDefault) {
+        updateProbabilityDisplay();
+      }
+    });
+
+    // Close settings button
+    document.getElementById('btnCloseSettings').addEventListener('click', function() {
+      document.getElementById('settingsPanel').classList.remove('open');
+    });
+
+    // Close settings when clicking outside
+    document.addEventListener('click', function(e) {
+      const settingsPanel = document.getElementById('settingsPanel');
+      const settingsBtn = document.getElementById('btnSettings');
+
+      if (settingsPanel.classList.contains('open') &&
+          !settingsPanel.contains(e.target) &&
+          !settingsBtn.contains(e.target)) {
+        settingsPanel.classList.remove('open');
+      }
+    });
+
+    // Shuffle button
+    document.querySelector('#btnShuffle').addEventListener('click', () => {
+      document.getElementById('gameResultDisplay').style.display = 'none';
+      getReady();
+    });
+
+    // Quick settings event listeners (in #settings panel)
     document.querySelector('#chkAutoRecording').addEventListener('change', (e) => {
       window.options.autoRecording = e.target.matches(':checked');
       window.roulette.setAutoRecording(window.options.autoRecording);
@@ -185,7 +2098,6 @@
 
     document.querySelector('#chkSkill').addEventListener('change', (e) => {
       window.options.useSkills = e.target.matches(':checked');
-      window.roulette.setWinningRank(window.options.winningRank);
     });
 
     document.querySelector('#in_winningRank').addEventListener('change', (e) => {
@@ -199,15 +2111,57 @@
       winnerType = 'last';
       setWinnerRank(total);
     });
+
     document.querySelector('.btn-first-winner').addEventListener('click', () => {
       winnerType = 'first';
       setWinnerRank(1);
     });
 
+    // Initialize map selectors in both #settings and side-panel
+    const maps = window.roulette.getMaps();
+    const mapSelector = document.querySelector('#sltMap');
+    const settingsMapSelector = document.querySelector('#settingsMap');
+
+    maps.forEach((map) => {
+      // Add to bottom settings map selector
+      const option1 = document.createElement('option');
+      option1.value = map.index;
+      option1.innerHTML = map.title;
+      option1.setAttribute('data-trans', '');
+      window.translateElement(option1);
+      mapSelector.append(option1);
+
+      // Add to side-panel settings map selector
+      const option2 = document.createElement('option');
+      option2.value = map.index;
+      option2.innerHTML = map.title;
+      option2.setAttribute('data-trans', '');
+      window.translateElement(option2);
+      settingsMapSelector.append(option2);
+    });
+
+    // Sync map selectors
+    function syncMapSelectors(value) {
+      mapSelector.value = value;
+      settingsMapSelector.value = value;
+      window.roulette.setMap(value);
+    }
+
+    mapSelector.addEventListener('change', (e) => {
+      syncMapSelectors(e.target.value);
+    });
+
+    settingsMapSelector.addEventListener('change', (e) => {
+      syncMapSelectors(e.target.value);
+    });
+
+    // Game events
     window.roulette.addEventListener('goal', () => {
       ready = false;
       setTimeout(() => {
         document.querySelector('#settings').classList.remove('hide');
+        // Show game result panel when game ends
+        showGameResult();
       }, 3000);
     });
 
@@ -215,37 +2169,153 @@
       simpleToast(e.detail);
     });
 
+    // Initialize shuffle
     document.querySelector('#btnShuffle').click();
 
-    const maps = window.roulette.getMaps();
-    const mapSelector = document.querySelector('#sltMap');
-    maps.forEach((map) => {
-      const option = document.createElement('option');
-      option.value = map.index;
-      option.innerHTML = map.title;
-      option.setAttribute('data-trans', '');
-      window.translateElement(option);
-      mapSelector.append(option);
-    });
-    mapSelector.addEventListener('change', (e) => {
-      const index = e.target.value;
-      window.roulette.setMap(index);
-    });
+    // Main map zoom controls
+    document.querySelector('#mainMapZoomIn').addEventListener('click', () => {
+      if (window.roulette && window.roulette.setZoom) {
+        const now = Date.now();
+        if (now - lastZoomChange < 100) return;
+        lastZoomChange = now;
 
-    function simpleToast(msg) {
-      const toast = document.createElement('div');
-      toast.classList.add('toast');
-      toast.innerHTML = msg;
-
-      if (window.translateElement) {
-        window.translateElement(toast);
+        currentZoom = Math.min(currentZoom * 1.5, 5);
+        window.roulette.setZoom(currentZoom * 30);
+        updateZoomDisplay();
       }
+    });
 
-      document.body.appendChild(toast);
-      setTimeout(() => {
-        document.body.removeChild(toast);
-      }, 1200);
+    document.querySelector('#mainMapZoomOut').addEventListener('click', () => {
+      if (window.roulette && window.roulette.setZoom) {
+        const now = Date.now();
+        if (now - lastZoomChange < 100) return;
+        lastZoomChange = now;
+
+        currentZoom = Math.max(currentZoom / 1.5, 0.2);
+        window.roulette.setZoom(currentZoom * 30);
+        updateZoomDisplay();
+      }
+    });
+
+    // Settings panel controls
+    document.getElementById('showProbabilityDefault').addEventListener('change', function() {
+      const showProbability = this.checked;
+      localStorage.setItem('showProbabilityDefault', showProbability);
+
+      if (showProbability) {
+        updateProbabilityDisplay();
+      } else {
+        document.getElementById('probabilityDisplay').style.display = 'none';
+      }
+    });
+
+    document.getElementById('settingsAutoRecording').addEventListener('change', function() {
+      window.options.autoRecording = this.checked;
+      window.roulette.setAutoRecording(window.options.autoRecording);
+    });
+
+    document.getElementById('settingsFirstWinner').addEventListener('click', function() {
+      winnerType = 'first';
+      setWinnerRank(1);
+    });
+
+    document.getElementById('settingsLastWinner').addEventListener('click', function() {
+      const total = window.roulette.getCount();
+      winnerType = 'last';
+      setWinnerRank(total);
+    });
+
+    document.getElementById('settingsWinningRank').addEventListener('change', function() {
+      const v = parseInt(this.value, 10);
+      winnerType = 'custom';
+      setWinnerRank(isNaN(v) ? 1 : v);
+    });
+
+    document.getElementById('settingsEnableSkills').addEventListener('change', function() {
+      window.options.useSkills = this.checked;
+      // Also sync with #chkSkill checkbox
+      const chkSkill = document.querySelector('#chkSkill');
+      if (chkSkill) chkSkill.checked = this.checked;
+    });
+
+    document.getElementById('settingsSkillCooldown').addEventListener('input', function() {
+      const cooldown = this.value;
+      document.getElementById('settingsSkillCooldownValue').textContent = cooldown;
+      if (window.roulette && window.roulette.setSkillCooldown) {
+        window.roulette.setSkillCooldown(cooldown * 1000);
+      }
+    });
+
+    document.getElementById('settingsSkillProbability').addEventListener('input', function() {
+      const probability = this.value;
+      document.getElementById('settingsSkillProbabilityValue').textContent = probability;
+      if (window.roulette && window.roulette.setSkillProbability) {
+        window.roulette.setSkillProbability(probability / 100);
+      }
+    });
+
+    // Minimap zoom controls
+    document.querySelector('#settingsMinimapZoomIn').addEventListener('click', () => {
+      if (window.roulette && window.roulette.setMinimapZoom) {
+        const currentMinimapZoom = window.roulette.getMinimapZoom();
+        const newZoom = Math.min(currentMinimapZoom * 1.5, 3);
+        window.roulette.setMinimapZoom(newZoom);
+        updateMinimapZoomDisplay();
+      }
+    });
+
+    document.querySelector('#settingsMinimapZoomOut').addEventListener('click', () => {
+      if (window.roulette && window.roulette.setMinimapZoom) {
+        const currentMinimapZoom = window.roulette.getMinimapZoom();
+        const newZoom = Math.max(currentMinimapZoom / 1.5, 0.5);
+        window.roulette.setMinimapZoom(newZoom);
+        updateMinimapZoomDisplay();
+      }
+    });
+
+    // Hide probability button (delegated)
+    document.addEventListener('click', (e) => {
+      if (e.target && e.target.id === 'btnHideProbability') {
+        const container = document.getElementById('probabilityDisplay');
+        if (container) {
+          container.style.display = 'none';
+        }
+      }
+    });
+
+    // Keyboard shortcuts for zoom
+    document.addEventListener('keydown', (e) => {
+      if (e.altKey) {
+        switch (e.key) {
+          case '=':
+          case '+':
+            e.preventDefault();
+            document.querySelector('#mainMapZoomIn').click();
+            break;
+          case '-':
+            e.preventDefault();
+            document.querySelector('#mainMapZoomOut').click();
+            break;
+        }
+      }
+    });
+
+    // Load settings from localStorage
+    const showProbabilityDefault = localStorage.getItem('showProbabilityDefault') === 'true';
+    document.getElementById('showProbabilityDefault').checked = showProbabilityDefault;
+
+    // Initialize
+    document.querySelector('#btnResetGameTop').click();
+
+    if (window.roulette && window.roulette.getZoom) {
+      currentZoom = window.roulette.getZoom() / 30;
     }
+
+    updateSpeedButtons();
+    updateZoomDisplay();
+    updateMinimapZoomDisplay();
+
+    if (showProbabilityDefault) updateProbabilityDisplay();
 
     // Download functionality
     document.querySelector('#btnDownloadTxt').addEventListener('click', downloadAsTxt);
@@ -253,6 +2323,22 @@
     document.querySelector('#btnDownloadXls').addEventListener('click', downloadAsXlsx);
   }
 
+  function simpleToast(msg) {
+    const toast = document.createElement('div');
+    toast.classList.add('toast');
+    toast.innerHTML = msg;
+
+    if (window.translateElement) {
+      window.translateElement(toast);
+    }
+
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      document.body.removeChild(toast);
+    }, 1200);
+  }
+
+  // Download functions
   function getResultsData() {
     if (!window.roulette || !window.roulette._winners) return [];
     const winners = window.roulette._winners;
@@ -325,6 +2411,61 @@
     URL.revokeObjectURL(url);
   }
 </script>
+
+<!-- Status Bar -->
+<div class="status-bar">
+  <div class="status-left">
+    <button id="btnShowProbabilityTop" class="top-bar-btn" title="Show probability distribution">
+      <i class="icon trophy"></i>
+      <span data-trans>Prob</span>
+    </button>
+    <button id="btnSettings" class="top-bar-btn" title="Game settings">
+      <i class="icon gear"></i>
+      <span data-trans>Settings</span>
+    </button>
+  </div>
+
+  <div class="status-center">
+    <div class="control-group">
+      <button id="btnSlowDownTop" class="top-bar-btn" title="Slow down ball movement">
+        <i class="icon fast-rewind"></i>
+      </button>
+      <span id="speedFactorDisplay" class="top-bar-speed-display" title="Current speed factor">
+        1.0x
+      </span>
+      <button id="btnResetSpeedTop" class="top-bar-btn" title="Reset speed to 1.0x">
+        <i class="icon redo"></i>
+      </button>
+      <button id="btnSpeedUpTop" class="top-bar-btn" title="Speed up ball movement">
+        <i class="icon fast-forward"></i>
+      </button>
+    </div>
+
+    <div class="control-group">
+      <button id="btnStart" class="top-bar-btn" title="Start game">
+        <i class="icon play"></i>
+        <span data-trans>Play</span>
+      </button>
+      <button id="btnFreezeTop" class="top-bar-btn" title="Freeze/unfreeze ball movement">
+        <i class="icon timer-pause"></i>
+        <span data-trans>Freeze</span>
+      </button>
+      <button id="btnShakeAllTop" class="top-bar-btn" title="Shake all balls to add randomness">
+        <i class="icon earthquake"></i>
+        <span data-trans>Shake</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="status-right">
+    <button id="btnResetGameTop" class="top-bar-btn" title="Reset the entire game">
+      <i class="icon replay"></i>
+      <span data-trans>Reset</span>
+    </button>
+  </div>
+</div>
+
+<!-- Settings Panel (Original Layout) -->
 <div id="settings" class="settings">
   <div class="right">
     <div class="row">
@@ -380,14 +2521,112 @@
         <i class="icon shuffle"></i>
         <span data-trans>Shuffle</span>
       </button>
-      <button id="btnStart">
+      <button id="btnStartBottom">
         <i class="icon play"></i>
         <span data-trans>Start</span>
       </button>
     </div>
   </div>
 </div>
-<div class="copyright">&copy; 2022-2025.<a href="https://lazygyu.net" target="_blank">lazygyu</a> <span data-trans>This program is freeware and may be used freely anywhere, including in broadcasts and videos.</span>
+
+<!-- In-Game Controls -->
+<div id="inGame">
+  <button id="btnShake" data-trans>Shake!</button>
+</div>
+
+<!-- Main Map Zoom Controls -->
+<div class="main-map-zoom-controls">
+  <button id="mainMapZoomIn" class="main-map-zoom-btn" title="Zoom in main map (Alt + +)">
+    +
+  </button>
+  <button id="mainMapZoomOut" class="main-map-zoom-btn" title="Zoom out main map (Alt + -)">
+    -
+  </button>
+</div>
+
+<!-- Probability Display -->
+<div id="probabilityDisplay"></div>
+
+<!-- Game Result Display -->
+<div id="gameResultDisplay"></div>
+
+<!-- Settings Panel -->
+<div id="settingsPanel" class="side-panel">
+  <div class="panel-header">
+    <h3 data-trans>Settings</h3>
+    <button id="btnCloseSettings" class="close-btn">×</button>
+  </div>
+  <div class="panel-content">
+    <div class="settings-section">
+      <h4 data-trans>Display Settings</h4>
+      <div class="setting-item toggle-item">
+        <label for="showProbabilityDefault">
+          <span data-trans>Show Probability per Option:</span>
+          <input type="checkbox" id="showProbabilityDefault">
+        </label>
+      </div>
+      <div class="setting-item">
+        <label data-trans>Minimap Zoom</label>
+        <div class="minimap-zoom-controls-settings">
+          <button id="settingsMinimapZoomOut" class="control-btn small" title="Zoom out minimap">−</button>
+          <span class="minimap-zoom-display">1.0x</span>
+          <button id="settingsMinimapZoomIn" class="control-btn small" title="Zoom in minimap">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h4 data-trans>Game Settings</h4>
+      <div class="setting-item">
+        <label for="settingsMap" data-trans>Map:</label>
+        <select id="settingsMap"></select>
+      </div>
+      <div class="setting-item toggle-item">
+        <label for="settingsAutoRecording">
+          <span data-trans>Auto Recording:</span>
+          <input type="checkbox" id="settingsAutoRecording">
+        </label>
+      </div>
+      <div class="setting-item">
+        <label data-trans>Winner Selection:</label>
+        <div class="winner-buttons">
+          <button id="settingsFirstWinner" class="winner-btn" data-trans>First</button>
+          <button id="settingsLastWinner" class="winner-btn active" data-trans>Last</button>
+          <input type="number" id="settingsWinningRank" value="1" min="1" />
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h4 data-trans>Skill Settings</h4>
+      <div class="setting-item toggle-item">
+        <label for="settingsEnableSkills">
+          <span data-trans>Enable Skills:</span>
+          <input type="checkbox" id="settingsEnableSkills" checked>
+        </label>
+      </div>
+      <div class="setting-item range-item">
+        <label for="settingsSkillCooldown">
+          <span data-trans>Skill Cooldown Time (seconds):</span>
+          <span id="settingsSkillCooldownValue">5</span>
+        </label>
+        <input type="range" id="settingsSkillCooldown" min="1" max="30" step="1" value="5">
+      </div>
+      <div class="setting-item range-item">
+        <label for="settingsSkillProbability">
+          <span data-trans>Skill Probability (%):</span>
+          <span id="settingsSkillProbabilityValue">20</span>
+        </label>
+        <input type="range" id="settingsSkillProbability" min="0" max="100" step="1" value="20">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Copyright -->
+<div class="copyright">
+  &copy; 2022-2025. <a href="https://lazygyu.net" target="_blank">lazygyu</a>
+  <span data-trans>This program is freeware and may be used freely anywhere, including in broadcasts and videos.</span>
 </div>
 </body>
 </html>
