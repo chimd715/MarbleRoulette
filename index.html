@@ -1681,8 +1681,7 @@
       return;
     }
 
-    const winningRank = window.options.winningRank || 0;
-    const winner = winners[winningRank];
+    const winner = window.roulette._winner;
 
     let html = `
       <div class="result-header">
